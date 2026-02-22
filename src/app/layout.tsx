@@ -2,23 +2,23 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BrainHub - IQ 지능테스트",
+  title: "BrainLab - IQ 지능테스트",
   description: "10문항으로 측정하는 나의 예상 IQ. 지금 바로 도전해보세요!",
   openGraph: {
-    title: "BrainHub - IQ 지능테스트",
+    title: "BrainLab - IQ 지능테스트",
     description: "10문항으로 측정하는 나의 예상 IQ. 지금 바로 도전해보세요!",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "BrainHub - IQ 지능테스트",
+    title: "BrainLab - IQ 지능테스트",
     description: "10문항으로 측정하는 나의 예상 IQ. 지금 바로 도전해보세요!",
   },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "BrainHub",
+    title: "BrainLab",
   },
 };
 

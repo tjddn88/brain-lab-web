@@ -27,7 +27,7 @@ export default function HomePage() {
       {/* 헤더 */}
       <div className="text-center mb-12">
         <div className="text-6xl mb-4">🧠</div>
-        <h1 className="text-4xl font-bold text-white mb-2">BrainHub</h1>
+        <h1 className="text-4xl font-bold text-white mb-2">BrainLab</h1>
         <p className="text-slate-400 text-lg">IQ 지능테스트</p>
       </div>
 

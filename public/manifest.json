@@ -1,6 +1,6 @@
 {
-  "name": "BrainHub - IQ 지능테스트",
-  "short_name": "BrainHub",
+  "name": "BrainLab - IQ 지능테스트",
+  "short_name": "BrainLab",
   "description": "10문항으로 측정하는 나의 예상 IQ",
   "start_url": "/",
   "display": "standalone",
