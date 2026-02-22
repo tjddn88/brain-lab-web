@@ -74,7 +74,7 @@ export default function ResultCard({ result }: ResultCardProps) {
             <p className="text-slate-400 text-xs mb-1">정답</p>
             <p className="text-white text-xl font-bold">
               {result.correctCount}
-              <span className="text-slate-400 text-sm">/10</span>
+              <span className="text-slate-400 text-sm">/15</span>
             </p>
           </div>
           <div>

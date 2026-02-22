@@ -44,7 +44,7 @@ export default function QuestionCard({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* 정답율 */}
       {question.correctRate !== null && (
         <div className="flex justify-end">
@@ -54,17 +54,17 @@ export default function QuestionCard({
         </div>
       )}
 
-      <p className="text-white text-lg font-medium leading-relaxed">
+      <p className="text-white text-base font-medium leading-relaxed">
         {question.content}
       </p>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {question.options.map((option, index) => (
           <button
             key={index}
             onClick={() => !feedback && onSelect(index)}
             disabled={!!feedback}
-            className={`w-full text-left px-4 py-4 rounded-xl border transition font-medium ${getButtonStyle(index)}`}
+            className={`w-full text-left px-4 py-3 rounded-xl border transition font-medium ${getButtonStyle(index)}`}
           >
             <span
               className={`inline-block w-7 h-7 rounded-full text-sm text-center leading-7 mr-3 font-bold ${getLabelStyle(index)}`}

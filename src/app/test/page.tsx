@@ -101,13 +101,14 @@ export default function TestPage() {
     return () => clearTimeout(t);
   }, [phase, advanceFromFeedback]);
 
-  // 답 제출 (버튼 클릭 or 시간 초과)
+  // 답 제출 (선택 즉시 or 시간 초과)
   const submitAnswer = useCallback((answerIndex: number) => {
     if (phaseRef.current !== "question") return;
     const qs = questionsRef.current;
     const idx = currentIndexRef.current;
     const q = qs[idx];
     const correct = answerIndex === q.answer;
+    setSelectedAnswer(answerIndex);
     setAnswers((prev) => new Map(prev).set(q.id, answerIndex));
     setLastCorrect(correct);
     setPhase("feedback");
@@ -117,10 +118,6 @@ export default function TestPage() {
     // 시간 초과 = 미응답(-1) = 오답
     submitAnswer(-1);
   }, [submitAnswer]);
-
-  const handleNext = () => {
-    if (selectedAnswer !== null) submitAnswer(selectedAnswer);
-  };
 
   if (phase === "loading") {
     return (
@@ -188,9 +185,9 @@ export default function TestPage() {
   const questionInCat = currentIndex - catStart + 1;
 
   return (
-    <div className="flex flex-col flex-1 px-4 py-6">
+    <div className="flex flex-col flex-1 px-4 py-3">
       {/* 헤더 */}
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <span className="text-slate-500 text-sm">{question.category}</span>
           <span className="text-slate-600 text-sm">·</span>
@@ -208,7 +205,7 @@ export default function TestPage() {
       </div>
 
       {/* 전체 진행 바 */}
-      <div className="w-full bg-slate-700 rounded-full h-1 mb-6">
+      <div className="w-full bg-slate-700 rounded-full h-1 mb-3">
         <div
           className="bg-indigo-500 h-1 rounded-full transition-all duration-300"
           style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
@@ -216,18 +213,16 @@ export default function TestPage() {
       </div>
 
       {/* 문제 */}
-      <div className="flex-1">
-        <QuestionCard
-          question={question}
-          selected={selectedAnswer}
-          onSelect={setSelectedAnswer}
-          feedback={isFeedback ? { correctAnswer: question.answer } : null}
-        />
-      </div>
+      <QuestionCard
+        question={question}
+        selected={selectedAnswer}
+        onSelect={submitAnswer}
+        feedback={isFeedback ? { correctAnswer: question.answer } : null}
+      />
 
       {/* 피드백 메시지 */}
       {isFeedback && !lastCorrect && (
-        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-center">
+        <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-center">
           <span className="text-red-400 text-sm">
             정답:{" "}
             <span className="font-bold text-red-300">
@@ -237,27 +232,12 @@ export default function TestPage() {
         </div>
       )}
 
-      {/* 버튼 */}
-      <div className="mt-6">
-        {phase === "question" && (
-          <button
-            onClick={handleNext}
-            disabled={selectedAnswer === null}
-            className={`w-full py-4 rounded-xl font-bold text-lg transition ${
-              selectedAnswer !== null
-                ? "bg-indigo-600 hover:bg-indigo-500 text-white"
-                : "bg-slate-700 text-slate-500 cursor-not-allowed"
-            }`}
-          >
-            다음 문제
-          </button>
-        )}
-        {isFeedback && (
-          <div className="text-center text-slate-500 text-sm py-3">
-            {FEEDBACK_SECONDS}초 후 자동으로 넘어갑니다...
-          </div>
-        )}
-      </div>
+      {/* 피드백 안내 */}
+      {isFeedback && (
+        <div className="text-center text-slate-500 text-xs mt-2">
+          {FEEDBACK_SECONDS}초 후 자동으로 넘어갑니다...
+        </div>
+      )}
     </div>
   );
 }

@@ -98,7 +98,7 @@ export default function RankingPageClient() {
                 {entry.estimatedIq}
               </span>
               <span className="text-center text-slate-400 text-sm">
-                {entry.correctCount}/10
+                {entry.correctCount}/15
               </span>
               <span className="text-center text-slate-500 text-xs">
                 {formatTime(entry.timeSeconds)}
