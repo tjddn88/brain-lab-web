@@ -90,7 +90,7 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
 
   useEffect(() => {
     // 방금 완료된 결과는 sessionStorage에서 먼저 확인
@@ -122,29 +122,32 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
       });
   }, [shareToken]);
 
-  const handleCopyLink = async () => {
+  const handleShare = async () => {
     const url = `${window.location.origin}/result/${shareToken}`;
     analytics.resultShareClick();
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      const el = document.createElement("textarea");
-      el.value = url;
-      el.style.position = "fixed";
-      el.style.opacity = "0";
-      document.body.appendChild(el);
-      el.focus();
-      el.select();
+
+    if (navigator.share) {
       try {
-        document.execCommand("copy");
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        await navigator.share({ title: `${result?.nickname}님의 IQ 결과 | BrainLab`, url });
       } catch {
-        // ignore
+        // 사용자 취소
       }
-      document.body.removeChild(el);
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        const el = document.createElement("textarea");
+        el.value = url;
+        el.style.position = "fixed";
+        el.style.opacity = "0";
+        document.body.appendChild(el);
+        el.focus();
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+      }
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
     }
   };
 
@@ -184,10 +187,10 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
 
       <div className="mt-6 space-y-3">
         <button
-          onClick={handleCopyLink}
+          onClick={handleShare}
           className="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-4 rounded-xl transition flex items-center justify-center gap-2"
         >
-          {copied ? "✅ 링크가 복사되었습니다!" : "🔗 결과 링크 복사"}
+          {shared ? "✅ 링크가 복사되었습니다!" : "🔗 결과 공유하기"}
         </button>
         <button
           onClick={() => {

@@ -5,20 +5,42 @@ interface Props {
   params: Promise<{ shareToken: string }>;
 }
 
+const INTERNAL_API = "http://localhost:8080/api";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { shareToken } = await params;
-  void shareToken;
+
+  try {
+    const res = await fetch(`${INTERNAL_API}/results/${shareToken}`, {
+      next: { revalidate: 3600 },
+    });
+    const data = await res.json();
+    if (data.success && data.data) {
+      const r = data.data;
+      const title = `${r.nickname}님의 IQ 결과 | BrainLab`;
+      const description = `예상 IQ ${r.estimatedIq} · 상위 ${r.topPercent}% 🧠 나도 테스트해보기!`;
+      return {
+        title,
+        description,
+        openGraph: { title, description, type: "website" },
+        twitter: { card: "summary", title, description },
+      };
+    }
+  } catch {
+    // fallback
+  }
+
   return {
-    title: `IQ 테스트 결과 | BrainLab`,
-    description: "BrainLab IQ 테스트 결과를 확인해보세요!",
+    title: "IQ 테스트 결과 | BrainLab",
+    description: "5분 안에 끝나는 IQ 테스트 🧠 내 두뇌의 잠재력은?",
     openGraph: {
-      title: `IQ 테스트 결과 | BrainLab`,
-      description: "BrainLab IQ 테스트 결과를 확인해보세요!",
+      title: "IQ 테스트 결과 | BrainLab",
+      description: "5분 안에 끝나는 IQ 테스트 🧠 내 두뇌의 잠재력은?",
     },
     twitter: {
       card: "summary",
-      title: `IQ 테스트 결과 | BrainLab`,
-      description: "BrainLab IQ 테스트 결과를 확인해보세요!",
+      title: "IQ 테스트 결과 | BrainLab",
+      description: "5분 안에 끝나는 IQ 테스트 🧠 내 두뇌의 잠재력은?",
     },
   };
 }
