@@ -20,10 +20,9 @@ function formatTime(seconds: number): string {
 }
 
 const PERCENTILE_LABELS: Record<number, string> = {
-  30: "상위 30%",
-  50: "상위 50%",
-  70: "상위 70%",
-  90: "상위 90%",
+  25: "상위 25%",
+  50: "상위 50% (중앙값)",
+  75: "상위 75%",
 };
 
 const COL = "grid-cols-[2rem_1fr_3.5rem_3rem_3rem]";
@@ -69,11 +68,11 @@ export default function RankingPageClient() {
         </div>
         {/* 정보 뱃지 */}
         <div className="flex flex-wrap gap-2 ml-8">
-          <span className="inline-flex items-center gap-1 bg-slate-800 border border-slate-700 rounded-full px-2.5 py-0.5 text-xs text-slate-400">
-            <span className="text-amber-400">★</span> IP당 최고점수 1개만 표시
+          <span className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 rounded-full px-3 py-1 text-xs text-amber-400 font-medium">
+            <span>★</span> IP당 최고점수 1개만 표시
           </span>
-          <span className="inline-flex items-center gap-1 bg-slate-800 border border-slate-700 rounded-full px-2.5 py-0.5 text-xs text-slate-400">
-            <span className="text-indigo-400">↻</span> 1분마다 갱신
+          <span className="inline-flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/30 rounded-full px-3 py-1 text-xs text-indigo-400 font-medium">
+            <span>↻</span> 순위는 1분마다 갱신
           </span>
         </div>
       </div>
