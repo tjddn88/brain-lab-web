@@ -66,37 +66,37 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center flex-1 px-6 py-12">
+    <div className="flex flex-col items-center justify-center flex-1 px-6 py-8">
       {/* 헤더 */}
-      <div className="text-center mb-12">
-        <div className="text-6xl mb-4">🧠</div>
+      <div className="text-center mb-8">
+        <div className="text-5xl mb-3">🧠</div>
         <h1 className="text-4xl font-bold text-white mb-2">BrainLab</h1>
-        <p className="text-slate-400 text-lg">3분 안에 끝내는 두뇌 자극 IQ 테스트</p>
+        <p className="text-slate-400 text-base">3분 안에 끝내는 두뇌 자극 IQ 테스트</p>
         <p className="text-slate-600 text-xs mt-1">공식 IQ 검사가 아닌 참고용 테스트입니다</p>
       </div>
 
       {/* 설명 카드 */}
-      <div className="w-full bg-slate-800 rounded-2xl p-6 mb-8 space-y-3">
-        <div className="flex items-start gap-3">
-          <span className="text-xl">📝</span>
-          <p className="text-slate-300">총 <strong className="text-white">15문항</strong>으로 구성</p>
+      <div className="w-full bg-slate-800 rounded-2xl p-5 mb-6 space-y-2">
+        <div className="flex items-center gap-3">
+          <span className="text-lg w-6 text-center">📝</span>
+          <p className="text-slate-300 text-sm">총 <strong className="text-white">15문항</strong>으로 구성</p>
         </div>
-        <div className="flex items-start gap-3">
-          <span className="text-xl">⏱️</span>
-          <p className="text-slate-300">문제당 <strong className="text-white">10초</strong> 제한</p>
+        <div className="flex items-center gap-3">
+          <span className="text-lg w-6 text-center">⏱️</span>
+          <p className="text-slate-300 text-sm">문제당 <strong className="text-white">10초</strong> 제한</p>
         </div>
-        <div className="flex items-start gap-3">
-          <span className="text-xl">🏆</span>
-          <p className="text-slate-300">전체 참여자 대비 <strong className="text-white">순위와 예상 IQ</strong> 확인</p>
+        <div className="flex items-center gap-3">
+          <span className="text-lg w-6 text-center">🏆</span>
+          <p className="text-slate-300 text-sm">전체 참여자 대비 <strong className="text-white">순위와 예상 IQ</strong> 확인</p>
         </div>
-        <div className="flex items-start gap-3">
-          <span className="text-xl">🔗</span>
-          <p className="text-slate-300">결과를 <strong className="text-white">링크로 공유</strong> 가능</p>
+        <div className="flex items-center gap-3">
+          <span className="text-lg w-6 text-center">🔗</span>
+          <p className="text-slate-300 text-sm">결과를 <strong className="text-white">링크로 공유</strong> 가능</p>
         </div>
       </div>
 
       {/* 닉네임 입력 */}
-      <div className="w-full space-y-4">
+      <div className="w-full space-y-3">
         <div>
           <label className="block text-slate-300 text-sm mb-2 font-medium">닉네임</label>
           <input
@@ -117,21 +117,21 @@ export default function HomePage() {
         <button
           onClick={handleStart}
           disabled={checking}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold py-4 rounded-xl transition text-lg disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold py-4 rounded-xl transition text-base disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {checking ? "확인 중..." : "테스트 시작"}
         </button>
 
         <button
           onClick={() => router.push("/ranking")}
-          className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium py-3 rounded-xl transition"
+          className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium py-4 rounded-xl transition text-base"
         >
           🏆 전체 순위 보기
         </button>
 
         <button
           onClick={handleShare}
-          className="w-full text-slate-400 hover:text-white py-3 transition"
+          className="w-full text-slate-500 hover:text-slate-300 py-2 transition text-sm"
         >
           {shared ? "✅ 링크가 복사되었습니다!" : "🔗 친구에게 공유하기"}
         </button>
