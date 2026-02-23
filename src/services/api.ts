@@ -32,8 +32,8 @@ export async function submitResult(
   return res.data;
 }
 
-export async function getResult(id: string): Promise<ResultResponse> {
-  const res = await fetchApi<ResultResponse>(`/results/${id}`);
+export async function getResult(shareToken: string): Promise<ResultResponse> {
+  const res = await fetchApi<ResultResponse>(`/results/${shareToken}`);
   if (!res.success || !res.data) throw new Error(res.error || "결과 조회 실패");
   return res.data;
 }

@@ -27,6 +27,7 @@ export interface QuestionFeedback {
 
 export interface ResultResponse {
   id: number;
+  shareToken: string;
   nickname: string;
   score: number;
   correctCount: number;

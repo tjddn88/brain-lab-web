@@ -114,7 +114,7 @@ export default function TestPage() {
       analytics.testComplete(result.score, result.correctCount, result.estimatedIq);
       sessionStorage.setItem("lastResult", JSON.stringify(result));
       sessionStorage.setItem("lastQuestions", JSON.stringify(qs));
-      router.push(`/result/${result.id}`);
+      router.push(`/result/${result.shareToken}`);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "결과 저장에 실패했습니다.";
       setError(msg);

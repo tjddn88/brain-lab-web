@@ -84,7 +84,7 @@ function AnswerReview({
   );
 }
 
-export default function ResultPageClient({ id }: { id: string }) {
+export default function ResultPageClient({ shareToken }: { shareToken: string }) {
   const router = useRouter();
   const [result, setResult] = useState<ResultResponse | null>(null);
   const [questions, setQuestions] = useState<Question[] | null>(null);
@@ -100,7 +100,7 @@ export default function ResultPageClient({ id }: { id: string }) {
     if (cached) {
       try {
         const parsed = JSON.parse(cached) as ResultResponse;
-        if (String(parsed.id) === id) {
+        if (parsed.shareToken === shareToken) {
           setResult(parsed);
           if (cachedQuestions) setQuestions(JSON.parse(cachedQuestions));
           setLoading(false);
@@ -111,7 +111,7 @@ export default function ResultPageClient({ id }: { id: string }) {
       }
     }
 
-    getResult(id)
+    getResult(shareToken)
       .then((r) => {
         setResult(r);
         setLoading(false);
@@ -120,17 +120,16 @@ export default function ResultPageClient({ id }: { id: string }) {
         setError("결과를 찾을 수 없습니다.");
         setLoading(false);
       });
-  }, [id]);
+  }, [shareToken]);
 
   const handleCopyLink = async () => {
-    const url = `${window.location.origin}/result/${id}`;
+    const url = `${window.location.origin}/result/${shareToken}`;
     analytics.resultShareClick();
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // HTTP 환경 fallback (execCommand)
       const el = document.createElement("textarea");
       el.value = url;
       el.style.position = "fixed";
