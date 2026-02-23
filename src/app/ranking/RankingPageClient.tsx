@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRanking } from "@/services/api";
 import { RankingEntry } from "@/types";
+import { analytics } from "@/lib/analytics";
 
 function getRankEmoji(rank: number): string {
   if (rank === 1) return "🥇";
@@ -25,6 +26,7 @@ export default function RankingPageClient() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    analytics.rankingView();
     getRanking()
       .then(setRanking)
       .catch(() => setError("순위를 불러오지 못했습니다."))

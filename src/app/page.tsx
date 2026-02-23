@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { checkEligibility } from "@/services/api";
+import { analytics } from "@/lib/analytics";
 
 export default function HomePage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function HomePage() {
   const handleShare = async () => {
     const url = "https://brainlab.live";
     const text = "나 IQ 테스트 해봤는데 너도 해봐 👇";
+    analytics.shareClick();
     if (navigator.share) {
       try {
         await navigator.share({ title: "BrainLab IQ 테스트", text, url });
@@ -53,6 +55,7 @@ export default function HomePage() {
     try {
       const canSubmit = await checkEligibility();
       if (!canSubmit) {
+        analytics.alreadySubmitted();
         setError("오늘은 이미 테스트를 완료하셨습니다. 매일 한 번만 참여할 수 있습니다.");
         return;
       }
@@ -61,6 +64,7 @@ export default function HomePage() {
     } finally {
       setChecking(false);
     }
+    analytics.testStart();
     sessionStorage.setItem("nickname", trimmed);
     router.push("/test");
   };

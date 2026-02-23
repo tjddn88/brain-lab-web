@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { getResult } from "@/services/api";
 import { Question, QuestionFeedback, ResultResponse } from "@/types";
 import ResultCard from "@/components/ResultCard";
+import { analytics } from "@/lib/analytics";
 
 const LABELS = ["A", "B", "C", "D"];
 
@@ -123,6 +124,7 @@ export default function ResultPageClient({ id }: { id: string }) {
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/result/${id}`;
+    analytics.resultShareClick();
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);

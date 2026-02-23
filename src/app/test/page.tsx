@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getQuestions, submitResult } from "@/services/api";
+import { analytics } from "@/lib/analytics";
 import { Question } from "@/types";
 import QuestionCard from "@/components/QuestionCard";
 import Timer from "@/components/Timer";
@@ -74,6 +75,7 @@ export default function TestPage() {
     }));
     try {
       const result = await submitResult(nickname, answerItems, sessionTokenRef.current);
+      analytics.testComplete(result.score, result.correctCount, result.estimatedIq);
       sessionStorage.setItem("lastResult", JSON.stringify(result));
       sessionStorage.setItem("lastQuestions", JSON.stringify(qs));
       router.push(`/result/${result.id}`);
