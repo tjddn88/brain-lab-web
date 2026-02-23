@@ -123,8 +123,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* 닉네임 입력 + 버튼 */}
-      <div className="w-full space-y-3">
+      {/* 닉네임 입력 + 버튼 (우측 FAB 영역 pr-20으로 회피) */}
+      <div className="w-full space-y-3 pr-20">
         <input
           type="text"
           value={nickname}
@@ -162,8 +162,8 @@ export default function HomePage() {
         </p>
       </div>
 
-      {/* 플로팅 버튼 (공유 + 피드백) */}
-      <div className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-40">
+      {/* 플로팅 버튼 (공유 + 피드백) - 우측 하단 고정 */}
+      <div className="fixed right-4 bottom-8 flex flex-col gap-3 z-40">
         {/* 공유 */}
         <button
           onClick={handleShare}
