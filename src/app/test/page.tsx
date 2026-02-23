@@ -38,6 +38,9 @@ export default function TestPage() {
   useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
+  // 문제/단계 변경 시 항상 맨 위로
+  useEffect(() => { window.scrollTo(0, 0); }, [currentIndex, phase]);
+
   useEffect(() => {
     const nickname = sessionStorage.getItem("nickname");
     if (!nickname) { router.replace("/"); return; }
