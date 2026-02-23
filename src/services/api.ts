@@ -43,3 +43,9 @@ export async function getRanking(): Promise<RankingEntry[]> {
   if (!res.success || !res.data) throw new Error(res.error || "순위 조회 실패");
   return res.data;
 }
+
+export async function checkEligibility(): Promise<boolean> {
+  const res = await fetchApi<{ canSubmit: boolean }>("/questions/eligibility");
+  if (!res.success || !res.data) return true; // 오류 시 허용
+  return res.data.canSubmit;
+}

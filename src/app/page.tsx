@@ -2,13 +2,44 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { checkEligibility } from "@/services/api";
 
 export default function HomePage() {
   const router = useRouter();
   const [nickname, setNickname] = useState("");
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [shared, setShared] = useState(false);
 
-  const handleStart = () => {
+  const handleShare = async () => {
+    const url = "https://brainlab.live";
+    const text = "나 IQ 테스트 해봤는데 너도 해봐 👇";
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "BrainLab IQ 테스트", text, url });
+      } catch {
+        // 사용자가 취소한 경우 등
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        const el = document.createElement("textarea");
+        el.value = url;
+        el.style.position = "fixed";
+        el.style.opacity = "0";
+        document.body.appendChild(el);
+        el.focus();
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+      }
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    }
+  };
+
+  const handleStart = async () => {
     const trimmed = nickname.trim();
     if (!trimmed) {
       setError("닉네임을 입력해주세요.");
@@ -17,6 +48,18 @@ export default function HomePage() {
     if (trimmed.length > 20) {
       setError("닉네임은 20자 이하여야 합니다.");
       return;
+    }
+    setChecking(true);
+    try {
+      const canSubmit = await checkEligibility();
+      if (!canSubmit) {
+        setError("오늘은 이미 테스트를 완료하셨습니다. 매일 한 번만 참여할 수 있습니다.");
+        return;
+      }
+    } catch {
+      // 체크 실패 시 진행 허용
+    } finally {
+      setChecking(false);
     }
     sessionStorage.setItem("nickname", trimmed);
     router.push("/test");
@@ -72,9 +115,10 @@ export default function HomePage() {
 
         <button
           onClick={handleStart}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold py-4 rounded-xl transition text-lg"
+          disabled={checking}
+          className="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold py-4 rounded-xl transition text-lg disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          테스트 시작
+          {checking ? "확인 중..." : "테스트 시작"}
         </button>
 
         <button
@@ -82,6 +126,13 @@ export default function HomePage() {
           className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium py-3 rounded-xl transition"
         >
           🏆 전체 순위 보기
+        </button>
+
+        <button
+          onClick={handleShare}
+          className="w-full text-slate-400 hover:text-white py-3 transition"
+        >
+          {shared ? "✅ 링크가 복사되었습니다!" : "🔗 친구에게 공유하기"}
         </button>
       </div>
     </div>
