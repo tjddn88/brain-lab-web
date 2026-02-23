@@ -5,17 +5,17 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://brainlab.live"),
   title: "BrainLab - IQ 지능테스트",
-  description: "5분 안에 끝나는 IQ 테스트 🧠 예상 IQ를 지금 바로 확인하세요.",
+  description: "5분 안에 끝나는 IQ 테스트 🧠 내 두뇌의 잠재력은?",
   openGraph: {
     title: "BrainLab - IQ 지능테스트",
-    description: "5분 안에 끝나는 IQ 테스트 🧠 예상 IQ를 지금 바로 확인하세요.",
+    description: "5분 안에 끝나는 IQ 테스트 🧠 내 두뇌의 잠재력은?",
     type: "website",
     url: "https://brainlab.live",
   },
   twitter: {
     card: "summary_large_image",
     title: "BrainLab - IQ 지능테스트",
-    description: "5분 안에 끝나는 IQ 테스트 🧠 예상 IQ를 지금 바로 확인하세요.",
+    description: "5분 안에 끝나는 IQ 테스트 🧠 내 두뇌의 잠재력은?",
   },
   manifest: "/manifest.json",
   appleWebApp: {
