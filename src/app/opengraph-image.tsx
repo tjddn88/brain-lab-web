@@ -1,6 +1,5 @@
 import { ImageResponse } from 'next/og'
 
-export const runtime = 'edge'
 export const alt = 'BrainLab IQ 테스트'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
