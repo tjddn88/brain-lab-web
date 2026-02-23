@@ -94,7 +94,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center flex-1 px-6 py-8">
+    <div className="flex flex-col items-center justify-center flex-1 px-6 pt-4 pb-8">
       {/* 헤더 */}
       <div className="text-center mb-8">
         <div className="text-5xl mb-3">🧠</div>
@@ -124,7 +124,7 @@ export default function HomePage() {
       </div>
 
       {/* 닉네임 입력 + 버튼 (우측 FAB 영역 pr-20으로 회피) */}
-      <div className="w-full space-y-3 pr-20">
+      <div className="w-full space-y-3">
         <input
           type="text"
           value={nickname}
@@ -149,7 +149,7 @@ export default function HomePage() {
 
         <button
           onClick={() => router.push("/ranking")}
-          className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium py-4 rounded-xl transition text-base"
+          className="w-full border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 font-medium py-4 rounded-xl transition text-base"
         >
           🏆 전체 순위 보기
         </button>
