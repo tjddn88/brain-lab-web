@@ -38,7 +38,7 @@ export default function HomePage() {
 
   const handleShare = async () => {
     const url = "https://brainlab.live";
-    const text = "나 IQ 테스트 해봤는데 너도 해봐 👇";
+    const text = "5분 안에 끝나는 IQ 테스트 🧠 예상 IQ와 전체 참여자 대비 내 등수를 바로 확인하세요.";
     analytics.shareClick();
     if (navigator.share) {
       try {
