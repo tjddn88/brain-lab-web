@@ -71,7 +71,8 @@ export default function HomePage() {
       <div className="text-center mb-12">
         <div className="text-6xl mb-4">🧠</div>
         <h1 className="text-4xl font-bold text-white mb-2">BrainLab</h1>
-        <p className="text-slate-400 text-lg">IQ 지능테스트</p>
+        <p className="text-slate-400 text-lg">3분 안에 끝내는 두뇌 자극 IQ 테스트</p>
+        <p className="text-slate-600 text-xs mt-1">공식 IQ 검사가 아닌 참고용 테스트입니다</p>
       </div>
 
       {/* 설명 카드 */}
@@ -82,7 +83,7 @@ export default function HomePage() {
         </div>
         <div className="flex items-start gap-3">
           <span className="text-xl">⏱️</span>
-          <p className="text-slate-300">문제당 <strong className="text-white">10초</strong> 제한 — 시간 초과 시 자동으로 넘어감</p>
+          <p className="text-slate-300">문제당 <strong className="text-white">10초</strong> 제한</p>
         </div>
         <div className="flex items-start gap-3">
           <span className="text-xl">🏆</span>
