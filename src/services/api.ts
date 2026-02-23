@@ -49,3 +49,11 @@ export async function checkEligibility(): Promise<boolean> {
   if (!res.success || !res.data) return true; // 오류 시 허용
   return res.data.canSubmit;
 }
+
+export async function submitFeedback(content: string): Promise<void> {
+  const res = await fetchApi<void>("/feedbacks", {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
+  if (!res.success) throw new Error(res.error || "피드백 전송 실패");
+}

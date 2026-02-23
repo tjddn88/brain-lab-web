@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { checkEligibility } from "@/services/api";
+import { checkEligibility, submitFeedback } from "@/services/api";
 import { analytics } from "@/lib/analytics";
 
 export default function HomePage() {
@@ -11,6 +11,30 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
   const [shared, setShared] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackSending, setFeedbackSending] = useState(false);
+  const [feedbackDone, setFeedbackDone] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
+
+  const handleFeedbackSubmit = async () => {
+    if (!feedbackText.trim()) return;
+    setFeedbackSending(true);
+    setFeedbackError("");
+    try {
+      await submitFeedback(feedbackText.trim());
+      setFeedbackDone(true);
+      setFeedbackText("");
+      setTimeout(() => {
+        setFeedbackOpen(false);
+        setFeedbackDone(false);
+      }, 1500);
+    } catch (e: unknown) {
+      setFeedbackError(e instanceof Error ? e.message : "전송에 실패했습니다.");
+    } finally {
+      setFeedbackSending(false);
+    }
+  };
 
   const handleShare = async () => {
     const url = "https://brainlab.live";
@@ -141,11 +165,65 @@ export default function HomePage() {
         </button>
       </div>
 
-      <div className="mt-6 pt-4 border-t border-slate-800 text-center">
-        <p className="text-slate-600 text-xs">
+      <div className="mt-6 pt-4 border-t border-slate-800 text-center space-y-2">
+        <button
+          onClick={() => { setFeedbackOpen(true); setFeedbackError(""); }}
+          className="text-slate-600 hover:text-slate-400 text-xs transition"
+        >
+          💬 개발자에게 피드백
+        </button>
+        <p className="text-slate-700 text-xs">
           🛡️ 공정한 테스트를 위해 다양한 AI 방지 기술이 적용되어 있습니다
         </p>
       </div>
+
+      {/* 피드백 모달 */}
+      {feedbackOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setFeedbackOpen(false); }}
+        >
+          <div className="w-full max-w-sm bg-slate-800 rounded-2xl p-5 border border-slate-700">
+            <h2 className="text-white font-bold mb-4">💬 개발자에게 피드백</h2>
+
+            {feedbackDone ? (
+              <p className="text-green-400 text-center py-4">✅ 피드백이 전송되었습니다!</p>
+            ) : (
+              <>
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="의견이나 제안을 자유롭게 작성해주세요..."
+                  maxLength={500}
+                  rows={4}
+                  className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition resize-none text-sm"
+                />
+                <div className="flex justify-between items-center mt-1 mb-3">
+                  {feedbackError
+                    ? <p className="text-red-400 text-xs">{feedbackError}</p>
+                    : <span />}
+                  <span className="text-slate-600 text-xs ml-auto">{feedbackText.length}/500</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setFeedbackOpen(false)}
+                    className="flex-1 py-3 rounded-xl border border-slate-600 text-slate-400 hover:text-white transition text-sm"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={handleFeedbackSubmit}
+                    disabled={feedbackSending || !feedbackText.trim()}
+                    className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {feedbackSending ? "전송 중..." : "보내기"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
