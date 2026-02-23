@@ -1,4 +1,4 @@
-import { AnswerItem, ApiResponse, Question, RankingEntry, ResultResponse } from "@/types";
+import { AnswerItem, ApiResponse, QuestionsResponse, RankingEntry, ResultResponse } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
 
@@ -13,8 +13,8 @@ async function fetchApi<T>(
   return res.json();
 }
 
-export async function getQuestions(): Promise<Question[]> {
-  const res = await fetchApi<Question[]>("/questions");
+export async function getQuestions(): Promise<QuestionsResponse> {
+  const res = await fetchApi<QuestionsResponse>("/questions");
   if (!res.success || !res.data) throw new Error(res.error || "문제 로딩 실패");
   return res.data;
 }
@@ -22,11 +22,11 @@ export async function getQuestions(): Promise<Question[]> {
 export async function submitResult(
   nickname: string,
   answers: AnswerItem[],
-  timeSeconds: number
+  sessionToken: string
 ): Promise<ResultResponse> {
   const res = await fetchApi<ResultResponse>("/results", {
     method: "POST",
-    body: JSON.stringify({ nickname, answers, timeSeconds }),
+    body: JSON.stringify({ nickname, answers, sessionToken }),
   });
   if (!res.success || !res.data) throw new Error(res.error || "결과 저장 실패");
   return res.data;

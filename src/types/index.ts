@@ -2,16 +2,27 @@ export interface Question {
   id: number;
   content: string;
   options: string[];
-  answer: number;
   difficulty: number;
   orderNum: number;
   category: string;
   correctRate: number | null;
 }
 
+export interface QuestionsResponse {
+  sessionToken: string;
+  questions: Question[];
+}
+
 export interface AnswerItem {
   questionId: number;
   answer: number;
+}
+
+export interface QuestionFeedback {
+  questionId: number;
+  userAnswer: number;
+  correctAnswer: number;
+  isCorrect: boolean;
 }
 
 export interface ResultResponse {
@@ -24,6 +35,7 @@ export interface ResultResponse {
   totalParticipants: number;
   topPercent: number;
   estimatedIq: number;
+  answerFeedback: QuestionFeedback[];
 }
 
 export interface RankingEntry {

@@ -41,6 +41,7 @@ export default function RankingPageClient() {
           ←
         </button>
         <h1 className="text-white font-bold text-xl">🏆 전체 순위</h1>
+        <span className="ml-auto text-xs text-slate-500">1분마다 갱신</span>
       </div>
 
       {loading ? (

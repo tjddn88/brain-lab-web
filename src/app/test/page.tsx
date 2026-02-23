@@ -8,7 +8,6 @@ import QuestionCard from "@/components/QuestionCard";
 import Timer from "@/components/Timer";
 
 const QUESTION_SECONDS = 10;
-const FEEDBACK_SECONDS = 3;
 
 const CATEGORY_CONFIG: Record<string, { emoji: string; desc: string }> = {
   수리논리: { emoji: "🔢", desc: "수열과 수리 추론 능력을 측정합니다" },
@@ -18,7 +17,7 @@ const CATEGORY_CONFIG: Record<string, { emoji: string; desc: string }> = {
   패턴논리: { emoji: "🧩", desc: "패턴 인식과 논리적 사고를 측정합니다" },
 };
 
-type Phase = "loading" | "intro" | "question" | "feedback" | "submitting";
+type Phase = "loading" | "intro" | "question" | "submitting";
 
 export default function TestPage() {
   const router = useRouter();
@@ -26,11 +25,9 @@ export default function TestPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("loading");
   const [answers, setAnswers] = useState<Map<number, number>>(new Map());
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [lastCorrect, setLastCorrect] = useState(false);
   const [error, setError] = useState("");
 
-  const startTimeRef = useRef<number>(0);
+  const sessionTokenRef = useRef<string>("");
   const answersRef = useRef(answers);
   const questionsRef = useRef(questions);
   const currentIndexRef = useRef(currentIndex);
@@ -45,10 +42,10 @@ export default function TestPage() {
     const nickname = sessionStorage.getItem("nickname");
     if (!nickname) { router.replace("/"); return; }
     getQuestions()
-      .then((qs) => {
-        setQuestions(qs);
-        questionsRef.current = qs;
-        startTimeRef.current = Date.now();
+      .then((res) => {
+        setQuestions(res.questions);
+        questionsRef.current = res.questions;
+        sessionTokenRef.current = res.sessionToken;
         setPhase("intro");
       })
       .catch(() => setError("문제를 불러오지 못했습니다."));
@@ -65,7 +62,6 @@ export default function TestPage() {
 
   const handleSubmit = useCallback(async () => {
     setPhase("submitting");
-    const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000);
     const nickname = sessionStorage.getItem("nickname") || "익명";
     const qs = questionsRef.current;
     const ans = answersRef.current;
@@ -74,48 +70,37 @@ export default function TestPage() {
       answer: ans.get(q.id) ?? -1,
     }));
     try {
-      const result = await submitResult(nickname, answerItems, elapsed);
+      const result = await submitResult(nickname, answerItems, sessionTokenRef.current);
       sessionStorage.setItem("lastResult", JSON.stringify(result));
+      sessionStorage.setItem("lastQuestions", JSON.stringify(qs));
       router.push(`/result/${result.id}`);
-    } catch {
-      setError("결과 저장에 실패했습니다. 다시 시도해주세요.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "결과 저장에 실패했습니다.";
+      setError(msg);
     }
   }, [router]);
 
-  // 피드백 3초 후 자동 다음으로
-  const advanceFromFeedback = useCallback(() => {
-    const qs = questionsRef.current;
-    const nextIdx = currentIndexRef.current + 1;
-    if (nextIdx >= qs.length) {
-      handleSubmit();
-      return;
-    }
-    setCurrentIndex(nextIdx);
-    setSelectedAnswer(null);
-    setPhase(isNewCategory(nextIdx, qs) ? "intro" : "question");
-  }, [handleSubmit]);
-
-  useEffect(() => {
-    if (phase !== "feedback") return;
-    const t = setTimeout(advanceFromFeedback, FEEDBACK_SECONDS * 1000);
-    return () => clearTimeout(t);
-  }, [phase, advanceFromFeedback]);
-
-  // 답 제출 (선택 즉시 or 시간 초과)
   const submitAnswer = useCallback((answerIndex: number) => {
     if (phaseRef.current !== "question") return;
     const qs = questionsRef.current;
     const idx = currentIndexRef.current;
     const q = qs[idx];
-    const correct = answerIndex === q.answer;
-    setSelectedAnswer(answerIndex);
-    setAnswers((prev) => new Map(prev).set(q.id, answerIndex));
-    setLastCorrect(correct);
-    setPhase("feedback");
-  }, []);
+
+    // ref 즉시 갱신 (handleSubmit이 최신 답안 참조하도록)
+    const newAnswers = new Map(answersRef.current).set(q.id, answerIndex);
+    answersRef.current = newAnswers;
+    setAnswers(newAnswers);
+
+    const nextIdx = idx + 1;
+    if (nextIdx >= qs.length) {
+      handleSubmit();
+    } else {
+      setCurrentIndex(nextIdx);
+      setPhase(isNewCategory(nextIdx, qs) ? "intro" : "question");
+    }
+  }, [handleSubmit]);
 
   const handleTimeUp = useCallback(() => {
-    // 시간 초과 = 미응답(-1) = 오답
     submitAnswer(-1);
   }, [submitAnswer]);
 
@@ -176,11 +161,8 @@ export default function TestPage() {
     );
   }
 
-  // ── 문제 / 피드백 화면 ─────────────────────────────────────────────
+  // ── 문제 화면 ─────────────────────────────────────────────────────
   const question = questions[currentIndex];
-  const isFeedback = phase === "feedback";
-
-  // 현재 카테고리 내 몇 번째 문제인지 (1~3)
   const catStart = questions.findIndex((q) => q.category === question.category);
   const questionInCat = currentIndex - catStart + 1;
 
@@ -194,14 +176,7 @@ export default function TestPage() {
           <span className="text-white font-bold">{questionInCat}</span>
           <span className="text-slate-500 text-sm">/ 3</span>
         </div>
-        {phase === "question" && (
-          <Timer key={currentIndex} totalSeconds={QUESTION_SECONDS} onTimeUp={handleTimeUp} />
-        )}
-        {isFeedback && (
-          <span className={`font-bold text-lg ${lastCorrect ? "text-green-400" : "text-red-400"}`}>
-            {lastCorrect ? "정답! ✓" : "오답 ✗"}
-          </span>
-        )}
+        <Timer key={currentIndex} totalSeconds={QUESTION_SECONDS} onTimeUp={handleTimeUp} />
       </div>
 
       {/* 전체 진행 바 */}
@@ -215,29 +190,8 @@ export default function TestPage() {
       {/* 문제 */}
       <QuestionCard
         question={question}
-        selected={selectedAnswer}
         onSelect={submitAnswer}
-        feedback={isFeedback ? { correctAnswer: question.answer } : null}
       />
-
-      {/* 피드백 메시지 */}
-      {isFeedback && !lastCorrect && (
-        <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-center">
-          <span className="text-red-400 text-sm">
-            정답:{" "}
-            <span className="font-bold text-red-300">
-              {question.options[question.answer]}
-            </span>
-          </span>
-        </div>
-      )}
-
-      {/* 피드백 안내 */}
-      {isFeedback && (
-        <div className="text-center text-slate-500 text-xs mt-2">
-          {FEEDBACK_SECONDS}초 후 자동으로 넘어갑니다...
-        </div>
-      )}
     </div>
   );
 }
