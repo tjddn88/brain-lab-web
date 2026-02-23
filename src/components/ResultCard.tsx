@@ -4,6 +4,7 @@ import { ResultResponse } from "@/types";
 
 interface ResultCardProps {
   result: ResultResponse;
+  iqDelta?: number | null;
 }
 
 function getIqLabel(iq: number): string {
@@ -30,7 +31,7 @@ function formatTime(seconds: number): string {
   return `${m}분 ${s}초`;
 }
 
-export default function ResultCard({ result }: ResultCardProps) {
+export default function ResultCard({ result, iqDelta }: ResultCardProps) {
   return (
     <div className="w-full space-y-4">
       {/* IQ 카드 */}
@@ -42,6 +43,11 @@ export default function ResultCard({ result }: ResultCardProps) {
         <p className={`text-lg font-semibold ${getIqColor(result.estimatedIq)}`}>
           {getIqLabel(result.estimatedIq)}
         </p>
+        {iqDelta != null && iqDelta !== 0 && (
+          <p className={`text-sm font-medium mt-2 ${iqDelta > 0 ? "text-green-400" : "text-red-400"}`}>
+            {iqDelta > 0 ? `▲ +${iqDelta}` : `▼ ${iqDelta}`} 지난번 대비
+          </p>
+        )}
       </div>
 
       {/* 순위 카드 */}

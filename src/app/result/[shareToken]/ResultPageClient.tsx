@@ -8,6 +8,7 @@ import ResultCard from "@/components/ResultCard";
 import { analytics } from "@/lib/analytics";
 
 const LABELS = ["A", "B", "C", "D"];
+const CAT_ORDER = ["수리논리", "언어유추", "인지반사", "공간도형", "패턴논리"];
 
 function AnswerReview({
   feedback,
@@ -74,6 +75,11 @@ function AnswerReview({
                   {item.userAnswer === -1 && (
                     <p className="text-slate-500 text-xs">시간 초과 (미응답)</p>
                   )}
+                  {q.explanation && (
+                    <p className="text-slate-400 text-xs leading-relaxed border-t border-slate-700 pt-2">
+                      💡 {q.explanation}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -91,9 +97,11 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [shared, setShared] = useState(false);
+  const [isOwn, setIsOwn] = useState(false);
+  const [showChallengeIntro, setShowChallengeIntro] = useState(false);
+  const [iqDelta, setIqDelta] = useState<number | null>(null);
 
   useEffect(() => {
-    // 방금 완료된 결과는 sessionStorage에서 먼저 확인
     const cached = sessionStorage.getItem("lastResult");
     const cachedQuestions = sessionStorage.getItem("lastQuestions");
 
@@ -102,6 +110,7 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
         const parsed = JSON.parse(cached) as ResultResponse;
         if (parsed.shareToken === shareToken) {
           setResult(parsed);
+          setIsOwn(true);
           if (cachedQuestions) setQuestions(JSON.parse(cachedQuestions));
           setLoading(false);
           return;
@@ -114,6 +123,7 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
     getResult(shareToken)
       .then((r) => {
         setResult(r);
+        setShowChallengeIntro(true);
         setLoading(false);
       })
       .catch(() => {
@@ -121,6 +131,24 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
         setLoading(false);
       });
   }, [shareToken]);
+
+  // IQ 추이 (본인 결과만)
+  useEffect(() => {
+    if (!result || !isOwn) return;
+    try {
+      const raw = localStorage.getItem("iqHistory");
+      const history: { iq: number; token: string }[] = raw ? JSON.parse(raw) : [];
+      const prev = [...history].reverse().find((h) => h.token !== result.shareToken);
+      if (prev) setIqDelta(result.estimatedIq - prev.iq);
+      if (!history.some((h) => h.token === result.shareToken)) {
+        history.push({ iq: result.estimatedIq, token: result.shareToken });
+        if (history.length > 10) history.shift();
+        localStorage.setItem("iqHistory", JSON.stringify(history));
+      }
+    } catch {
+      // ignore
+    }
+  }, [result, isOwn]);
 
   const handleShare = async () => {
     const url = `${window.location.origin}/result/${shareToken}`;
@@ -170,13 +198,88 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
     );
   }
 
+  // 친구 도전 인트로
+  if (showChallengeIntro) {
+    return (
+      <div className="flex flex-col items-center justify-center flex-1 px-6">
+        <div className="w-full bg-slate-800 rounded-2xl p-8 text-center space-y-4 border border-slate-700">
+          <div className="text-4xl">🧠</div>
+          <h2 className="text-white font-bold text-xl">{result.nickname}님 IQ 넘기 도전!</h2>
+          <div className="text-6xl font-black text-indigo-400">{result.estimatedIq}</div>
+          <p className="text-slate-400 text-sm">
+            상위 {result.topPercent}% · 정답 {result.correctCount}/15
+          </p>
+          <p className="text-slate-500 text-sm">나의 IQ는 얼마일까요?</p>
+          <div className="space-y-2 pt-2">
+            <button
+              onClick={() => {
+                sessionStorage.removeItem("nickname");
+                router.push("/");
+              }}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition"
+            >
+              도전하기
+            </button>
+            <button
+              onClick={() => setShowChallengeIntro(false)}
+              className="w-full text-slate-400 hover:text-white py-3 transition text-sm"
+            >
+              결과 자세히 보기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 카테고리별 점수 (본인 결과 + feedback 있을 때)
+  const categoryStats =
+    result.answerFeedback?.length > 0
+      ? CAT_ORDER.map((cat) => {
+          const items = result.answerFeedback.filter((f) => f.category === cat);
+          if (!items.length) return null;
+          return { cat, correct: items.filter((f) => f.isCorrect).length, total: items.length };
+        }).filter(Boolean)
+      : null;
+
   return (
     <div className="flex flex-col flex-1 px-4 py-8">
       <h1 className="text-center text-white font-bold text-xl mb-6">
         🧠 테스트 결과
       </h1>
 
-      <ResultCard result={result} />
+      <ResultCard result={result} iqDelta={iqDelta} />
+
+      {/* 카테고리별 점수 */}
+      {categoryStats && categoryStats.length > 0 && (
+        <div className="mt-4 bg-slate-800 rounded-2xl p-4 border border-slate-700">
+          <h3 className="text-white font-bold mb-3 text-sm">📊 카테고리별 결과</h3>
+          <div className="space-y-2">
+            {categoryStats.map((s) => s && (
+              <div key={s.cat} className="flex items-center gap-3">
+                <span className="text-slate-400 text-xs w-14 flex-shrink-0">{s.cat}</span>
+                <div className="flex-1 bg-slate-700 rounded-full h-1.5">
+                  <div
+                    className="bg-indigo-500 h-1.5 rounded-full"
+                    style={{ width: `${(s.correct / s.total) * 100}%` }}
+                  />
+                </div>
+                <span
+                  className={`text-sm font-bold w-8 text-right ${
+                    s.correct === s.total
+                      ? "text-green-400"
+                      : s.correct === 0
+                      ? "text-red-400"
+                      : "text-white"
+                  }`}
+                >
+                  {s.correct}/{s.total}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 오답노트 - 본인 결과이고 피드백 있을 때만 표시 */}
       {result.answerFeedback?.length > 0 && questions && (

@@ -73,18 +73,19 @@ export default function RankingPageClient() {
       ) : (
         <div className="space-y-2">
           {/* 컬럼 헤더 */}
-          <div className="grid grid-cols-[2.5rem_1fr_4rem_3rem_3rem] gap-2 px-3 py-2 text-xs text-slate-500 font-medium">
+          <div className="grid grid-cols-[2.5rem_1fr_4rem_3rem_2.5rem_2.5rem] gap-1 px-3 py-2 text-xs text-slate-500 font-medium">
             <span className="text-center">순위</span>
             <span>닉네임</span>
             <span className="text-center">예상IQ</span>
             <span className="text-center">정답</span>
             <span className="text-center">시간</span>
+            <span className="text-center">날짜</span>
           </div>
 
           {ranking.map((entry) => (
             <div
               key={entry.rank}
-              className={`grid grid-cols-[2.5rem_1fr_4rem_3rem_3rem] gap-2 items-center px-3 py-3 rounded-xl border ${
+              className={`grid grid-cols-[2.5rem_1fr_4rem_3rem_2.5rem_2.5rem] gap-1 items-center px-3 py-3 rounded-xl border ${
                 entry.rank <= 3
                   ? "bg-slate-700/50 border-slate-600"
                   : "bg-slate-800 border-slate-700"
@@ -108,6 +109,9 @@ export default function RankingPageClient() {
               </span>
               <span className="text-center text-slate-500 text-xs">
                 {formatTime(entry.timeSeconds)}
+              </span>
+              <span className="text-center text-slate-500 text-xs">
+                {entry.createdAt}
               </span>
             </div>
           ))}

@@ -6,6 +6,7 @@ export interface Question {
   orderNum: number;
   category: string;
   correctRate: number | null;
+  explanation?: string;
 }
 
 export interface QuestionsResponse {
@@ -23,6 +24,7 @@ export interface QuestionFeedback {
   userAnswer: number;
   correctAnswer: number;
   isCorrect: boolean;
+  category: string;
 }
 
 export interface ResultResponse {
@@ -46,6 +48,7 @@ export interface RankingEntry {
   correctCount: number;
   timeSeconds: number;
   estimatedIq: number;
+  createdAt: string;
 }
 
 export interface ApiResponse<T> {
