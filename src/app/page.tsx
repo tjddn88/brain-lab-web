@@ -140,6 +140,12 @@ export default function HomePage() {
           {shared ? "✅ 링크가 복사되었습니다!" : "🔗 친구에게 공유하기"}
         </button>
       </div>
+
+      <div className="mt-6 pt-4 border-t border-slate-800 text-center">
+        <p className="text-slate-600 text-xs">
+          🛡️ 공정한 테스트를 위해 텍스트 복사 차단 및 AI 방지 기술이 적용되어 있습니다
+        </p>
+      </div>
     </div>
   );
 }

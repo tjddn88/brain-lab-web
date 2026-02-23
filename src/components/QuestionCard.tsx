@@ -4,14 +4,23 @@ import { Question } from "@/types";
 
 interface QuestionCardProps {
   question: Question;
+  displayOptions: string[];
   onSelect: (index: number) => void;
 }
 
 const LABELS = ["A", "B", "C", "D"];
 
-export default function QuestionCard({ question, onSelect }: QuestionCardProps) {
+function obscureText(text: string): string {
+  return text.split("").join("\u200B");
+}
+
+export default function QuestionCard({ question, displayOptions, onSelect }: QuestionCardProps) {
   return (
-    <div className="space-y-3">
+    <div
+      className="space-y-3 select-none"
+      onCopy={(e) => e.preventDefault()}
+      onContextMenu={(e) => e.preventDefault()}
+    >
       {question.correctRate !== null && (
         <div className="flex justify-end">
           <span className="text-xs text-slate-500">
@@ -21,11 +30,11 @@ export default function QuestionCard({ question, onSelect }: QuestionCardProps) 
       )}
 
       <p className="text-white text-base font-medium leading-relaxed">
-        {question.content}
+        {obscureText(question.content)}
       </p>
 
       <div className="space-y-2">
-        {question.options.map((option, index) => (
+        {displayOptions.map((option, index) => (
           <button
             key={index}
             onClick={() => onSelect(index)}
@@ -34,7 +43,7 @@ export default function QuestionCard({ question, onSelect }: QuestionCardProps) 
             <span className="inline-block w-7 h-7 rounded-full text-sm text-center leading-7 mr-3 font-bold bg-slate-600 text-slate-300">
               {LABELS[index]}
             </span>
-            {option}
+            {obscureText(option)}
           </button>
         ))}
       </div>

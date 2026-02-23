@@ -8,7 +8,21 @@ import { Question } from "@/types";
 import QuestionCard from "@/components/QuestionCard";
 import Timer from "@/components/Timer";
 
-const QUESTION_SECONDS = 10;
+const QUESTION_SECONDS = 15;
+
+interface ShuffleInfo {
+  displayOptions: string[];
+  optionMap: number[]; // optionMap[displayedIdx] = originalIdx
+}
+
+function shuffleOptions(options: string[]): ShuffleInfo {
+  const indices = options.map((_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return { displayOptions: indices.map((i) => options[i]), optionMap: indices };
+}
 
 const CATEGORY_CONFIG: Record<string, { emoji: string; desc: string }> = {
   수리논리: { emoji: "🔢", desc: "수열과 수리 추론 능력을 측정합니다" },
@@ -28,16 +42,31 @@ export default function TestPage() {
   const [answers, setAnswers] = useState<Map<number, number>>(new Map());
   const [error, setError] = useState("");
 
+  const [shuffleMap, setShuffleMap] = useState<ShuffleInfo[]>([]);
+
   const sessionTokenRef = useRef<string>("");
   const answersRef = useRef(answers);
   const questionsRef = useRef(questions);
   const currentIndexRef = useRef(currentIndex);
   const phaseRef = useRef(phase);
+  const shuffleMapRef = useRef(shuffleMap);
 
   useEffect(() => { answersRef.current = answers; }, [answers]);
   useEffect(() => { questionsRef.current = questions; }, [questions]);
   useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
+  useEffect(() => { shuffleMapRef.current = shuffleMap; }, [shuffleMap]);
+
+  // 키보드 복사 방지
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && ["c", "a", "x"].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // 문제/단계 변경 시 항상 맨 위로
   useEffect(() => { window.scrollTo(0, 0); }, [currentIndex, phase]);
@@ -50,6 +79,9 @@ export default function TestPage() {
         setQuestions(res.questions);
         questionsRef.current = res.questions;
         sessionTokenRef.current = res.sessionToken;
+        const map = res.questions.map((q) => shuffleOptions(q.options));
+        setShuffleMap(map);
+        shuffleMapRef.current = map;
         setPhase("intro");
       })
       .catch(() => setError("문제를 불러오지 못했습니다."));
@@ -85,11 +117,16 @@ export default function TestPage() {
     }
   }, [router]);
 
-  const submitAnswer = useCallback((answerIndex: number) => {
+  const submitAnswer = useCallback((displayedIndex: number) => {
     if (phaseRef.current !== "question") return;
     const qs = questionsRef.current;
     const idx = currentIndexRef.current;
     const q = qs[idx];
+
+    // 셔플된 표시 인덱스 → 원본 정답 인덱스 변환 (-1은 시간 초과, 그대로 전달)
+    const answerIndex = displayedIndex === -1
+      ? -1
+      : (shuffleMapRef.current[idx]?.optionMap[displayedIndex] ?? displayedIndex);
 
     // ref 즉시 갱신 (handleSubmit이 최신 답안 참조하도록)
     const newAnswers = new Map(answersRef.current).set(q.id, answerIndex);
@@ -146,7 +183,7 @@ export default function TestPage() {
             <h2 className="text-2xl font-bold text-white mb-2">{category}</h2>
             <p className="text-slate-400 text-sm">{config.desc}</p>
           </div>
-          <div className="text-slate-500 text-sm">문제 3개 · 문제당 10초</div>
+          <div className="text-slate-500 text-sm">문제 3개 · 문제당 15초</div>
           <button
             onClick={() => setPhase("question")}
             className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition text-lg"
@@ -195,6 +232,7 @@ export default function TestPage() {
       {/* 문제 */}
       <QuestionCard
         question={question}
+        displayOptions={shuffleMap[currentIndex]?.displayOptions ?? question.options}
         onSelect={submitAnswer}
       />
     </div>
