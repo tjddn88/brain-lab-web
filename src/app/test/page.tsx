@@ -68,8 +68,12 @@ export default function TestPage() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // 문제/단계 변경 시 항상 맨 위로
-  useEffect(() => { window.scrollTo(0, 0); }, [currentIndex, phase]);
+  // 문제/단계 변경 시 항상 맨 위로 (blur 먼저 → 포커스 자동스크롤 방지)
+  useEffect(() => {
+    (document.activeElement as HTMLElement)?.blur();
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0; // Safari
+  }, [currentIndex, phase]);
 
   useEffect(() => {
     const nickname = sessionStorage.getItem("nickname");
