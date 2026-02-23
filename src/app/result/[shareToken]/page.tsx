@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       return {
         title,
         description,
-        openGraph: { title, description, type: "website" },
-        twitter: { card: "summary", title, description },
+        openGraph: { title, description, type: "website", images: [{ url: "/opengraph-image" }] },
+        twitter: { card: "summary_large_image", title, description, images: ["/opengraph-image"] },
       };
     }
   } catch {
@@ -36,11 +36,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: "IQ 테스트 결과 | BrainLab",
       description: "5분 안에 끝나는 IQ 테스트 🧠 내 두뇌의 잠재력은?",
+      images: [{ url: "/opengraph-image" }],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: "IQ 테스트 결과 | BrainLab",
       description: "5분 안에 끝나는 IQ 테스트 🧠 내 두뇌의 잠재력은?",
+      images: ["/opengraph-image"],
     },
   };
 }
