@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRanking } from "@/services/api";
-import { RankingResponse, PercentileEntry } from "@/types";
+import { RankingResponse } from "@/types";
 import { analytics } from "@/lib/analytics";
 
 function getRankEmoji(rank: number): string {
@@ -27,11 +27,29 @@ const PERCENTILE_LABELS: Record<number, string> = {
 
 const COL = "grid-cols-[2rem_1fr_3.5rem_3rem_3rem]";
 
+interface MyResult {
+  score: number;
+  estimatedIq: number;
+  correctCount: number;
+  timeSeconds: number;
+}
+
+// 0 = top10 이상, 1 = top10 아래~p[0] 이상, 2 = p[0] 아래~p[1] 이상, ...
+function getMySection(myScore: number, data: RankingResponse): number {
+  const last10Score = data.topEntries.at(-1)?.score ?? -1;
+  if (myScore >= last10Score) return 0;
+  for (let i = 0; i < data.percentileEntries.length; i++) {
+    if (myScore >= data.percentileEntries[i].score) return i + 1;
+  }
+  return data.percentileEntries.length + 1;
+}
+
 export default function RankingPageClient() {
   const router = useRouter();
   const [data, setData] = useState<RankingResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [myResult, setMyResult] = useState<MyResult | null>(null);
 
   useEffect(() => {
     analytics.rankingView();
@@ -39,14 +57,27 @@ export default function RankingPageClient() {
       .then(setData)
       .catch(() => setError("순위를 불러오지 못했습니다."))
       .finally(() => setLoading(false));
+
+    try {
+      const stored = localStorage.getItem("myResult");
+      if (stored) setMyResult(JSON.parse(stored));
+    } catch {}
   }, []);
 
-  // 퍼센타일 항목을 rank 기준으로 빠르게 찾기 위한 맵
-  const percentileByRank = new Map<number, PercentileEntry>(
-    (data?.percentileEntries ?? []).map((p) => [p.rank, p])
-  );
-
+  const mySection = data && myResult ? getMySection(myResult.score, data) : null;
   const isEmpty = data && data.topEntries.length === 0;
+
+  const MyRow = () => (
+    <div className={`grid ${COL} gap-1 items-center px-3 py-2.5 rounded-xl border border-indigo-500/60 bg-indigo-950/50`}>
+      <span className="text-center text-indigo-400 text-xs font-bold">나</span>
+      <span className="text-indigo-300 text-sm font-medium truncate">
+        내 점수 <span className="text-indigo-400/60 text-xs">({myResult!.score}점)</span>
+      </span>
+      <span className="text-center text-indigo-400 font-bold text-sm">{myResult!.estimatedIq}</span>
+      <span className="text-center text-indigo-400/80 text-sm">{myResult!.correctCount}/15</span>
+      <span className="text-center text-indigo-400/60 text-xs">{formatTime(myResult!.timeSeconds)}</span>
+    </div>
+  );
 
   return (
     <div className="flex flex-col flex-1 px-4 py-6">
@@ -66,7 +97,6 @@ export default function RankingPageClient() {
             </span>
           )}
         </div>
-        {/* 정보 뱃지 */}
         <div className="flex flex-wrap gap-2 ml-8">
           <span className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 rounded-full px-3 py-1 text-xs text-amber-400 font-medium">
             <span>★</span> IP당 최고점수 1개만 표시
@@ -125,22 +155,20 @@ export default function RankingPageClient() {
               <span className={`font-medium truncate text-sm ${entry.rank <= 3 ? "text-white" : "text-slate-300"}`}>
                 {entry.nickname}
               </span>
-              <span className="text-center text-indigo-400 font-bold text-sm">
-                {entry.estimatedIq}
-              </span>
-              <span className="text-center text-slate-400 text-sm">
-                {entry.correctCount}/15
-              </span>
-              <span className="text-center text-slate-500 text-xs">
-                {formatTime(entry.timeSeconds)}
-              </span>
+              <span className="text-center text-indigo-400 font-bold text-sm">{entry.estimatedIq}</span>
+              <span className="text-center text-slate-400 text-sm">{entry.correctCount}/15</span>
+              <span className="text-center text-slate-500 text-xs">{formatTime(entry.timeSeconds)}</span>
             </div>
           ))}
 
+          {/* 나 — TOP 10 이후 (section 0: top10 범위, section 1: top10~p25 사이) */}
+          {myResult && mySection !== null && mySection <= 1 && (
+            <MyRow />
+          )}
+
           {/* 퍼센타일 구간 */}
-          {data!.percentileEntries.map((p) => (
+          {data!.percentileEntries.map((p, idx) => (
             <div key={p.topPercent}>
-              {/* 구분선 + 라벨 */}
               <div className="flex items-center gap-2 py-2 px-1">
                 <div className="flex-1 h-px bg-slate-700" />
                 <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
@@ -148,24 +176,19 @@ export default function RankingPageClient() {
                 </span>
                 <div className="flex-1 h-px bg-slate-700" />
               </div>
-              {/* 해당 순위 항목 */}
               <div className={`grid ${COL} gap-1 items-center px-3 py-3 rounded-xl bg-slate-800/60 border border-slate-700/50`}>
-                <span className="text-center text-slate-400 text-sm font-bold">
-                  {p.rank}
-                </span>
-                <span className="font-medium truncate text-sm text-slate-400">
-                  {p.nickname}
-                </span>
-                <span className="text-center text-indigo-400/80 font-bold text-sm">
-                  {p.estimatedIq}
-                </span>
-                <span className="text-center text-slate-500 text-sm">
-                  {p.correctCount}/15
-                </span>
-                <span className="text-center text-slate-500 text-xs">
-                  {formatTime(p.timeSeconds)}
-                </span>
+                <span className="text-center text-slate-400 text-sm font-bold">{p.rank}</span>
+                <span className="font-medium truncate text-sm text-slate-400">{p.nickname}</span>
+                <span className="text-center text-indigo-400/80 font-bold text-sm">{p.estimatedIq}</span>
+                <span className="text-center text-slate-500 text-sm">{p.correctCount}/15</span>
+                <span className="text-center text-slate-500 text-xs">{formatTime(p.timeSeconds)}</span>
               </div>
+              {/* 나 — 이 퍼센타일 항목 이후 */}
+              {myResult && mySection !== null && mySection === idx + 2 && (
+                <div className="mt-1">
+                  <MyRow />
+                </div>
+              )}
             </div>
           ))}
         </div>
