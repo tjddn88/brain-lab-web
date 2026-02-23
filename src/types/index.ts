@@ -48,7 +48,22 @@ export interface RankingEntry {
   correctCount: number;
   timeSeconds: number;
   estimatedIq: number;
-  createdAt: string;
+}
+
+export interface PercentileEntry {
+  topPercent: number;
+  rank: number;
+  nickname: string;
+  score: number;
+  correctCount: number;
+  timeSeconds: number;
+  estimatedIq: number;
+}
+
+export interface RankingResponse {
+  topEntries: RankingEntry[];
+  percentileEntries: PercentileEntry[];
+  totalCount: number;
 }
 
 export interface ApiResponse<T> {

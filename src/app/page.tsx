@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { checkEligibility, submitFeedback } from "@/services/api";
+import { checkEligibility, checkNickname, submitFeedback } from "@/services/api";
 import { analytics } from "@/lib/analytics";
 
 export default function HomePage() {
@@ -75,6 +75,13 @@ export default function HomePage() {
       return;
     }
     setChecking(true);
+    try {
+      await checkNickname(trimmed);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "사용할 수 없는 닉네임입니다.");
+      setChecking(false);
+      return;
+    }
     try {
       const canSubmit = await checkEligibility();
       if (!canSubmit) {

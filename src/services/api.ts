@@ -1,4 +1,4 @@
-import { AnswerItem, ApiResponse, QuestionsResponse, RankingEntry, ResultResponse } from "@/types";
+import { AnswerItem, ApiResponse, QuestionsResponse, RankingResponse, ResultResponse } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
 
@@ -38,10 +38,15 @@ export async function getResult(shareToken: string): Promise<ResultResponse> {
   return res.data;
 }
 
-export async function getRanking(): Promise<RankingEntry[]> {
-  const res = await fetchApi<RankingEntry[]>("/results/ranking");
+export async function getRanking(): Promise<RankingResponse> {
+  const res = await fetchApi<RankingResponse>("/results/ranking");
   if (!res.success || !res.data) throw new Error(res.error || "순위 조회 실패");
   return res.data;
+}
+
+export async function checkNickname(nickname: string): Promise<void> {
+  const res = await fetchApi<unknown>(`/questions/nickname-check?nickname=${encodeURIComponent(nickname)}`);
+  if (!res.success) throw new Error(res.error || "사용할 수 없는 닉네임입니다.");
 }
 
 export async function checkEligibility(): Promise<boolean> {
