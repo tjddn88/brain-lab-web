@@ -123,24 +123,21 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* 닉네임 입력 */}
+      {/* 닉네임 입력 + 버튼 */}
       <div className="w-full space-y-3">
-        <div>
-          <label className="block text-slate-300 text-sm mb-2 font-medium">닉네임</label>
-          <input
-            type="text"
-            value={nickname}
-            onChange={(e) => {
-              setNickname(e.target.value);
-              setError("");
-            }}
-            onKeyDown={(e) => e.key === "Enter" && handleStart()}
-            placeholder="닉네임을 입력하세요 (최대 20자)"
-            maxLength={20}
-            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
-          />
-          {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
-        </div>
+        <input
+          type="text"
+          value={nickname}
+          onChange={(e) => {
+            setNickname(e.target.value);
+            setError("");
+          }}
+          onKeyDown={(e) => e.key === "Enter" && handleStart()}
+          placeholder="닉네임을 입력하세요 (최대 20자)"
+          maxLength={20}
+          className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+        />
+        {error && <p className="text-red-400 text-sm">{error}</p>}
 
         <button
           onClick={handleStart}
@@ -156,25 +153,47 @@ export default function HomePage() {
         >
           🏆 전체 순위 보기
         </button>
-
-        <button
-          onClick={handleShare}
-          className="w-full text-slate-500 hover:text-slate-300 py-2 transition text-sm"
-        >
-          {shared ? "✅ 링크가 복사되었습니다!" : "🔗 친구에게 공유하기"}
-        </button>
       </div>
 
-      <div className="mt-6 pt-4 border-t border-slate-800 text-center space-y-2">
-        <button
-          onClick={() => { setFeedbackOpen(true); setFeedbackError(""); }}
-          className="text-slate-600 hover:text-slate-400 text-xs transition"
-        >
-          💬 개발자에게 피드백
-        </button>
+      {/* 하단 안내 */}
+      <div className="mt-6 pt-4 border-t border-slate-800 text-center">
         <p className="text-slate-700 text-xs">
           🛡️ 공정한 테스트를 위해 다양한 AI 방지 기술이 적용되어 있습니다
         </p>
+      </div>
+
+      {/* 플로팅 버튼 (공유 + 피드백) */}
+      <div className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-40">
+        {/* 공유 */}
+        <button
+          onClick={handleShare}
+          className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition ${
+            shared ? "bg-green-500" : "bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700"
+          }`}
+          title="공유하기"
+        >
+          {shared ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+          )}
+        </button>
+
+        {/* 피드백 */}
+        <button
+          onClick={() => { setFeedbackOpen(true); setFeedbackError(""); }}
+          className="w-14 h-14 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center shadow-lg transition"
+          title="개발자에게 피드백"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        </button>
       </div>
 
       {/* 피드백 모달 */}
