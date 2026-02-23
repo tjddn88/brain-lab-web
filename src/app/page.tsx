@@ -38,11 +38,10 @@ export default function HomePage() {
 
   const handleShare = async () => {
     const url = "https://brainlab.live";
-    const text = "5분 안에 끝나는 IQ 테스트 🧠 예상 IQ와 전체 참여자 대비 내 등수를 바로 확인하세요.";
     analytics.shareClick();
     if (navigator.share) {
       try {
-        await navigator.share({ title: "BrainLab IQ 테스트", text, url });
+        await navigator.share({ title: "BrainLab IQ 테스트", url });
       } catch {
         // 사용자가 취소한 경우 등
       }
