@@ -32,16 +32,19 @@ export default function RankingPageClient() {
   }, []);
 
   return (
-    <div className="flex flex-col flex-1 px-4 py-8">
-      <div className="flex items-center mb-6">
-        <button
-          onClick={() => router.push("/")}
-          className="text-slate-400 hover:text-white mr-3 transition"
-        >
-          ←
-        </button>
-        <h1 className="text-white font-bold text-xl">🏆 전체 순위</h1>
-        <span className="ml-auto text-xs text-slate-500">1분마다 갱신</span>
+    <div className="flex flex-col flex-1 px-4 py-6">
+      {/* 헤더 */}
+      <div className="mb-4">
+        <div className="flex items-center mb-1">
+          <button
+            onClick={() => router.push("/")}
+            className="text-slate-400 hover:text-white mr-3 transition"
+          >
+            ←
+          </button>
+          <h1 className="text-white font-bold text-xl">🏆 전체 순위</h1>
+        </div>
+        <p className="text-slate-500 text-xs ml-8">순위는 1분마다 갱신됩니다.</p>
       </div>
 
       {loading ? (
@@ -67,11 +70,11 @@ export default function RankingPageClient() {
         </div>
       ) : (
         <div className="space-y-2">
-          {/* 헤더 */}
-          <div className="grid grid-cols-[2rem_1fr_3rem_3rem_3rem] gap-2 px-4 py-2 text-xs text-slate-500 font-medium">
+          {/* 컬럼 헤더 */}
+          <div className="grid grid-cols-[2.5rem_1fr_4rem_3rem_3rem] gap-2 px-3 py-2 text-xs text-slate-500 font-medium">
             <span className="text-center">순위</span>
             <span>닉네임</span>
-            <span className="text-center">IQ</span>
+            <span className="text-center">예상IQ</span>
             <span className="text-center">정답</span>
             <span className="text-center">시간</span>
           </div>
@@ -79,17 +82,17 @@ export default function RankingPageClient() {
           {ranking.map((entry) => (
             <div
               key={entry.rank}
-              className={`grid grid-cols-[2rem_1fr_3rem_3rem_3rem] gap-2 items-center px-4 py-3 rounded-xl border transition ${
+              className={`grid grid-cols-[2.5rem_1fr_4rem_3rem_3rem] gap-2 items-center px-3 py-3 rounded-xl border ${
                 entry.rank <= 3
                   ? "bg-slate-700/50 border-slate-600"
                   : "bg-slate-800 border-slate-700"
               }`}
             >
-              <span className="text-center text-lg font-bold">
+              <span className="text-center text-lg font-bold leading-none">
                 {getRankEmoji(entry.rank)}
               </span>
               <span
-                className={`font-medium truncate ${
+                className={`font-medium truncate text-sm ${
                   entry.rank <= 3 ? "text-white" : "text-slate-300"
                 }`}
               >
@@ -111,7 +114,7 @@ export default function RankingPageClient() {
 
       <button
         onClick={() => router.push("/")}
-        className="mt-8 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition"
+        className="mt-6 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition"
       >
         나도 테스트하기
       </button>
