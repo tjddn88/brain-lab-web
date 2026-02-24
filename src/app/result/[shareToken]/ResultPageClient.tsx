@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getResult } from "@/services/api";
 import { Question, QuestionFeedback, ResultResponse } from "@/types";
 import ResultCard from "@/components/ResultCard";
 import { analytics } from "@/lib/analytics";
-
-const LABELS = ["A", "B", "C", "D"];
-const CAT_ORDER = ["수리논리", "언어유추", "인지반사", "공간도형", "패턴논리"];
+import { copyToClipboard } from "@/lib/clipboard";
+import { OPTION_LABELS, CAT_ORDER } from "@/lib/utils";
 
 function AnswerReview({
   feedback,
@@ -18,7 +17,11 @@ function AnswerReview({
   questions: Question[];
 }) {
   const [expanded, setExpanded] = useState<number | null>(null);
-  const questionMap = new Map(questions.map((q) => [q.id, q]));
+  const reviewTrackedRef = useRef(false);
+  const questionMap = useMemo(
+    () => new Map(questions.map((q) => [q.id, q])),
+    [questions]
+  );
 
   return (
     <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700">
@@ -30,12 +33,22 @@ function AnswerReview({
           return (
             <div key={item.questionId} className="rounded-xl overflow-hidden">
               <button
-                onClick={() => setExpanded(isOpen ? null : idx)}
+                onClick={() => {
+                  if (!isOpen && !reviewTrackedRef.current) {
+                    analytics.answerReviewOpen();
+                    reviewTrackedRef.current = true;
+                  }
+                  setExpanded(isOpen ? null : idx);
+                }}
                 className={`w-full text-left px-3 py-2 flex items-center gap-3 transition ${
                   item.isCorrect ? "bg-green-500/10" : "bg-red-500/10"
                 }`}
               >
-                <span className={`text-lg ${item.isCorrect ? "text-green-400" : "text-red-400"}`}>
+                <span
+                  className={`text-lg ${
+                    item.isCorrect ? "text-green-400" : "text-red-400"
+                  }`}
+                >
                   {item.isCorrect ? "✓" : "✗"}
                 </span>
                 <span className="text-slate-400 text-xs flex-1 truncate">
@@ -62,9 +75,11 @@ function AnswerReview({
                               : "text-slate-500"
                           }`}
                         >
-                          <span className="font-bold">{LABELS[optIdx]}</span>
+                          <span className="font-bold">{OPTION_LABELS[optIdx]}</span>
                           <span>{opt}</span>
-                          {isCorrect && <span className="ml-auto text-xs">정답</span>}
+                          {isCorrect && (
+                            <span className="ml-auto text-xs">정답</span>
+                          )}
                           {isUserAnswer && !isCorrect && (
                             <span className="ml-auto text-xs">내 답</span>
                           )}
@@ -124,6 +139,7 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
       .then((r) => {
         setResult(r);
         setShowChallengeIntro(true);
+        analytics.resultViewShared(r.estimatedIq);
         setLoading(false);
       })
       .catch(() => {
@@ -153,31 +169,30 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
   const handleShare = async () => {
     const url = `${window.location.origin}/result/${shareToken}`;
     analytics.resultShareClick();
-
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${result?.nickname}님의 IQ 결과 | BrainLab`, url });
+        await navigator.share({
+          title: `${result?.nickname}님의 IQ 결과 | BrainLab`,
+          url,
+        });
       } catch {
         // 사용자 취소
       }
     } else {
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch {
-        const el = document.createElement("textarea");
-        el.value = url;
-        el.style.position = "fixed";
-        el.style.opacity = "0";
-        document.body.appendChild(el);
-        el.focus();
-        el.select();
-        document.execCommand("copy");
-        document.body.removeChild(el);
-      }
+      await copyToClipboard(url);
       setShared(true);
       setTimeout(() => setShared(false), 2000);
     }
   };
+
+  const categoryStats = useMemo(() => {
+    if (!result?.answerFeedback?.length) return null;
+    return CAT_ORDER.map((cat) => {
+      const items = result.answerFeedback!.filter((f) => f.category === cat);
+      if (!items.length) return null;
+      return { cat, correct: items.filter((f) => f.isCorrect).length, total: items.length };
+    }).filter(Boolean);
+  }, [result]);
 
   if (loading) {
     return (
@@ -204,7 +219,9 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
       <div className="flex flex-col items-center justify-center flex-1 px-6">
         <div className="w-full bg-slate-800 rounded-2xl p-8 text-center space-y-4 border border-slate-700">
           <div className="text-4xl">🧠</div>
-          <h2 className="text-white font-bold text-xl">{result.nickname}님 IQ 넘기 도전!</h2>
+          <h2 className="text-white font-bold text-xl">
+            {result.nickname}님 IQ 넘기 도전!
+          </h2>
           <div className="text-6xl font-black text-indigo-400">{result.estimatedIq}</div>
           <p className="text-slate-400 text-sm">
             상위 {result.topPercent}% · 정답 {result.correctCount}/15
@@ -213,6 +230,7 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
           <div className="space-y-2 pt-2">
             <button
               onClick={() => {
+                analytics.challengeClick();
                 sessionStorage.removeItem("nickname");
                 router.push("/");
               }}
@@ -232,21 +250,9 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
     );
   }
 
-  // 카테고리별 점수 (본인 결과 + feedback 있을 때)
-  const categoryStats =
-    result.answerFeedback?.length > 0
-      ? CAT_ORDER.map((cat) => {
-          const items = result.answerFeedback.filter((f) => f.category === cat);
-          if (!items.length) return null;
-          return { cat, correct: items.filter((f) => f.isCorrect).length, total: items.length };
-        }).filter(Boolean)
-      : null;
-
   return (
     <div className="flex flex-col flex-1 px-4 py-8">
-      <h1 className="text-center text-white font-bold text-xl mb-6">
-        🧠 테스트 결과
-      </h1>
+      <h1 className="text-center text-white font-bold text-xl mb-6">🧠 테스트 결과</h1>
 
       <ResultCard result={result} iqDelta={iqDelta} />
 
@@ -255,34 +261,39 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
         <div className="mt-4 bg-slate-800 rounded-2xl p-4 border border-slate-700">
           <h3 className="text-white font-bold mb-3 text-sm">📊 카테고리별 결과</h3>
           <div className="space-y-2">
-            {categoryStats.map((s) => s && (
-              <div key={s.cat} className="flex items-center gap-3">
-                <span className="text-slate-400 text-xs w-14 flex-shrink-0">{s.cat}</span>
-                <div className="flex-1 bg-slate-700 rounded-full h-1.5">
-                  <div
-                    className="bg-indigo-500 h-1.5 rounded-full"
-                    style={{ width: `${(s.correct / s.total) * 100}%` }}
-                  />
-                </div>
-                <span
-                  className={`text-sm font-bold w-8 text-right ${
-                    s.correct === s.total
-                      ? "text-green-400"
-                      : s.correct === 0
-                      ? "text-red-400"
-                      : "text-white"
-                  }`}
-                >
-                  {s.correct}/{s.total}
-                </span>
-              </div>
-            ))}
+            {categoryStats.map(
+              (s) =>
+                s && (
+                  <div key={s.cat} className="flex items-center gap-3">
+                    <span className="text-slate-400 text-xs w-14 flex-shrink-0">
+                      {s.cat}
+                    </span>
+                    <div className="flex-1 bg-slate-700 rounded-full h-1.5">
+                      <div
+                        className="bg-indigo-500 h-1.5 rounded-full"
+                        style={{ width: `${(s.correct / s.total) * 100}%` }}
+                      />
+                    </div>
+                    <span
+                      className={`text-sm font-bold w-8 text-right ${
+                        s.correct === s.total
+                          ? "text-green-400"
+                          : s.correct === 0
+                          ? "text-red-400"
+                          : "text-white"
+                      }`}
+                    >
+                      {s.correct}/{s.total}
+                    </span>
+                  </div>
+                )
+            )}
           </div>
         </div>
       )}
 
       {/* 오답노트 - 본인 결과이고 피드백 있을 때만 표시 */}
-      {result.answerFeedback?.length > 0 && questions && (
+      {result.answerFeedback && result.answerFeedback.length > 0 && questions && (
         <div className="mt-4">
           <AnswerReview feedback={result.answerFeedback} questions={questions} />
         </div>
@@ -297,6 +308,7 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
         </button>
         <button
           onClick={() => {
+            analytics.retakeClick();
             sessionStorage.removeItem("nickname");
             sessionStorage.removeItem("lastResult");
             sessionStorage.removeItem("lastQuestions");

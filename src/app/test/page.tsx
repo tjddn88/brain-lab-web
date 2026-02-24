@@ -32,6 +32,43 @@ const CATEGORY_CONFIG: Record<string, { emoji: string; desc: string }> = {
   패턴논리: { emoji: "🧩", desc: "패턴 인식과 논리적 사고를 측정합니다" },
 };
 
+interface CategoryIntroProps {
+  category: string;
+  catIndex: number;
+  totalCategories: number;
+  onStart: () => void;
+}
+
+function CategoryIntro({
+  category,
+  catIndex,
+  totalCategories,
+  onStart,
+}: CategoryIntroProps) {
+  const config = CATEGORY_CONFIG[category] ?? { emoji: "📝", desc: "" };
+  return (
+    <div className="flex flex-col items-center justify-center flex-1 px-6">
+      <div className="w-full bg-slate-800 rounded-2xl p-8 text-center space-y-5">
+        <div className="text-sm text-slate-500 font-medium">
+          {catIndex + 1} / {totalCategories} 카테고리
+        </div>
+        <div className="text-6xl">{config.emoji}</div>
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">{category}</h2>
+          <p className="text-slate-400 text-sm">{config.desc}</p>
+        </div>
+        <div className="text-slate-500 text-sm">문제 3개 · 문제당 15초</div>
+        <button
+          onClick={onStart}
+          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition text-lg"
+        >
+          시작하기
+        </button>
+      </div>
+    </div>
+  );
+}
+
 type Phase = "loading" | "intro" | "question" | "submitting";
 
 export default function TestPage() {
@@ -41,7 +78,6 @@ export default function TestPage() {
   const [phase, setPhase] = useState<Phase>("loading");
   const [answers, setAnswers] = useState<Map<number, number>>(new Map());
   const [error, setError] = useState("");
-
   const [shuffleMap, setShuffleMap] = useState<ShuffleInfo[]>([]);
 
   const sessionTokenRef = useRef<string>("");
@@ -115,12 +151,15 @@ export default function TestPage() {
       sessionStorage.setItem("lastResult", JSON.stringify(result));
       sessionStorage.setItem("lastQuestions", JSON.stringify(qs));
       try {
-        localStorage.setItem("myResult", JSON.stringify({
-          score: result.score,
-          estimatedIq: result.estimatedIq,
-          correctCount: result.correctCount,
-          timeSeconds: result.timeSeconds,
-        }));
+        localStorage.setItem(
+          "myResult",
+          JSON.stringify({
+            score: result.score,
+            estimatedIq: result.estimatedIq,
+            correctCount: result.correctCount,
+            timeSeconds: result.timeSeconds,
+          })
+        );
       } catch {}
       router.push(`/result/${result.shareToken}`);
     } catch (e: unknown) {
@@ -129,32 +168,36 @@ export default function TestPage() {
     }
   }, [router]);
 
-  const submitAnswer = useCallback((displayedIndex: number) => {
-    if (phaseRef.current !== "question") return;
-    const qs = questionsRef.current;
-    const idx = currentIndexRef.current;
-    const q = qs[idx];
+  const submitAnswer = useCallback(
+    (displayedIndex: number) => {
+      if (phaseRef.current !== "question") return;
+      const qs = questionsRef.current;
+      const idx = currentIndexRef.current;
+      const q = qs[idx];
 
-    // 셔플된 표시 인덱스 → 원본 정답 인덱스 변환 (-1은 시간 초과, 그대로 전달)
-    const answerIndex = displayedIndex === -1
-      ? -1
-      : (shuffleMapRef.current[idx]?.optionMap[displayedIndex] ?? displayedIndex);
+      const answerIndex =
+        displayedIndex === -1
+          ? -1
+          : (shuffleMapRef.current[idx]?.optionMap[displayedIndex] ?? displayedIndex);
 
-    // ref 즉시 갱신 (handleSubmit이 최신 답안 참조하도록)
-    const newAnswers = new Map(answersRef.current).set(q.id, answerIndex);
-    answersRef.current = newAnswers;
-    setAnswers(newAnswers);
+      const newAnswers = new Map(answersRef.current).set(q.id, answerIndex);
+      answersRef.current = newAnswers;
+      setAnswers(newAnswers);
 
-    const nextIdx = idx + 1;
-    if (nextIdx >= qs.length) {
-      handleSubmit();
-    } else {
-      setCurrentIndex(nextIdx);
-      setPhase(isNewCategory(nextIdx, qs) ? "intro" : "question");
-    }
-  }, [handleSubmit]);
+      const nextIdx = idx + 1;
+      if (nextIdx >= qs.length) {
+        handleSubmit();
+      } else {
+        setCurrentIndex(nextIdx);
+        setPhase(isNewCategory(nextIdx, qs) ? "intro" : "question");
+      }
+    },
+    [handleSubmit]
+  );
 
   const handleTimeUp = useCallback(() => {
+    const q = questionsRef.current[currentIndexRef.current];
+    analytics.questionTimeout(q?.category ?? "", currentIndexRef.current);
     submitAnswer(-1);
   }, [submitAnswer]);
 
@@ -178,32 +221,16 @@ export default function TestPage() {
     );
   }
 
-  // ── 카테고리 인트로 화면 ──────────────────────────────────────────
   if (phase === "intro") {
     const category = questions[currentIndex].category;
     const catIdx = categoryIndexOf(currentIndex, questions);
-    const config = CATEGORY_CONFIG[category] ?? { emoji: "📝", desc: "" };
-
     return (
-      <div className="flex flex-col items-center justify-center flex-1 px-6">
-        <div className="w-full bg-slate-800 rounded-2xl p-8 text-center space-y-5">
-          <div className="text-sm text-slate-500 font-medium">
-            {catIdx + 1} / {Object.keys(CATEGORY_CONFIG).length} 카테고리
-          </div>
-          <div className="text-6xl">{config.emoji}</div>
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-2">{category}</h2>
-            <p className="text-slate-400 text-sm">{config.desc}</p>
-          </div>
-          <div className="text-slate-500 text-sm">문제 3개 · 문제당 15초</div>
-          <button
-            onClick={() => setPhase("question")}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition text-lg"
-          >
-            시작하기
-          </button>
-        </div>
-      </div>
+      <CategoryIntro
+        category={category}
+        catIndex={catIdx}
+        totalCategories={Object.keys(CATEGORY_CONFIG).length}
+        onStart={() => setPhase("question")}
+      />
     );
   }
 
@@ -215,7 +242,7 @@ export default function TestPage() {
     );
   }
 
-  // ── 문제 화면 ─────────────────────────────────────────────────────
+  // ── 문제 화면 ────────────────────────────────────────────────
   const question = questions[currentIndex];
   const catStart = questions.findIndex((q) => q.category === question.category);
   const questionInCat = currentIndex - catStart + 1;
@@ -230,7 +257,11 @@ export default function TestPage() {
           <span className="text-white font-bold">{questionInCat}</span>
           <span className="text-slate-500 text-sm">/ 3</span>
         </div>
-        <Timer key={currentIndex} totalSeconds={QUESTION_SECONDS} onTimeUp={handleTimeUp} />
+        <Timer
+          key={currentIndex}
+          totalSeconds={QUESTION_SECONDS}
+          onTimeUp={handleTimeUp}
+        />
       </div>
 
       {/* 전체 진행 바 */}

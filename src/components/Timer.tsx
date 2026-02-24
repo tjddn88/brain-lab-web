@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface TimerProps {
   totalSeconds: number;
@@ -9,21 +9,19 @@ interface TimerProps {
 
 export default function Timer({ totalSeconds, onTimeUp }: TimerProps) {
   const [remaining, setRemaining] = useState(totalSeconds);
-
-  useEffect(() => {
-    setRemaining(totalSeconds);
-  }, [totalSeconds]);
+  const onTimeUpRef = useRef(onTimeUp);
+  onTimeUpRef.current = onTimeUp;
 
   useEffect(() => {
     if (remaining <= 0) {
-      onTimeUp();
+      onTimeUpRef.current();
       return;
     }
     const timer = setTimeout(() => {
       setRemaining((r) => r - 1);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [remaining, onTimeUp]);
+  }, [remaining]);
 
   const isUrgent = remaining <= 3;
   const progress = (remaining / totalSeconds) * 100;

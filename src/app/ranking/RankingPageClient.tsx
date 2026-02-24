@@ -5,18 +5,13 @@ import { useRouter } from "next/navigation";
 import { getRanking } from "@/services/api";
 import { RankingResponse } from "@/types";
 import { analytics } from "@/lib/analytics";
+import { formatTimeClock } from "@/lib/utils";
 
 function getRankEmoji(rank: number): string {
   if (rank === 1) return "🥇";
   if (rank === 2) return "🥈";
   if (rank === 3) return "🥉";
   return String(rank);
-}
-
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 const PERCENTILE_LABELS: Record<number, string> = {
@@ -68,14 +63,23 @@ export default function RankingPageClient() {
   const isEmpty = data && data.topEntries.length === 0;
 
   const MyRow = () => (
-    <div className={`grid ${COL} gap-1 items-center px-3 py-2.5 rounded-xl border border-indigo-500/60 bg-indigo-950/50`}>
+    <div
+      className={`grid ${COL} gap-1 items-center px-3 py-2.5 rounded-xl border border-indigo-500/60 bg-indigo-950/50`}
+    >
       <span className="text-center text-indigo-400 text-xs font-bold">나</span>
       <span className="text-indigo-300 text-sm font-medium truncate">
-        내 점수 <span className="text-indigo-400/60 text-xs">({myResult!.score}점)</span>
+        내 점수{" "}
+        <span className="text-indigo-400/60 text-xs">({myResult!.score}점)</span>
       </span>
-      <span className="text-center text-indigo-400 font-bold text-sm">{myResult!.estimatedIq}</span>
-      <span className="text-center text-indigo-400/80 text-sm">{myResult!.correctCount}/15</span>
-      <span className="text-center text-indigo-400/60 text-xs">{formatTime(myResult!.timeSeconds)}</span>
+      <span className="text-center text-indigo-400 font-bold text-sm">
+        {myResult!.estimatedIq}
+      </span>
+      <span className="text-center text-indigo-400/80 text-sm">
+        {myResult!.correctCount}/15
+      </span>
+      <span className="text-center text-indigo-400/60 text-xs">
+        {formatTimeClock(myResult!.timeSeconds)}
+      </span>
     </div>
   );
 
@@ -152,19 +156,27 @@ export default function RankingPageClient() {
               <span className="text-center text-base font-bold leading-none">
                 {getRankEmoji(entry.rank)}
               </span>
-              <span className={`font-medium truncate text-sm ${entry.rank <= 3 ? "text-white" : "text-slate-300"}`}>
+              <span
+                className={`font-medium truncate text-sm ${
+                  entry.rank <= 3 ? "text-white" : "text-slate-300"
+                }`}
+              >
                 {entry.nickname}
               </span>
-              <span className="text-center text-indigo-400 font-bold text-sm">{entry.estimatedIq}</span>
-              <span className="text-center text-slate-400 text-sm">{entry.correctCount}/15</span>
-              <span className="text-center text-slate-500 text-xs">{formatTime(entry.timeSeconds)}</span>
+              <span className="text-center text-indigo-400 font-bold text-sm">
+                {entry.estimatedIq}
+              </span>
+              <span className="text-center text-slate-400 text-sm">
+                {entry.correctCount}/15
+              </span>
+              <span className="text-center text-slate-500 text-xs">
+                {formatTimeClock(entry.timeSeconds)}
+              </span>
             </div>
           ))}
 
-          {/* 나 — TOP 10 이후 (section 0: top10 범위, section 1: top10~p25 사이) */}
-          {myResult && mySection !== null && mySection <= 1 && (
-            <MyRow />
-          )}
+          {/* 나 — TOP 10 이후 */}
+          {myResult && mySection !== null && mySection <= 1 && <MyRow />}
 
           {/* 퍼센타일 구간 */}
           {data!.percentileEntries.map((p, idx) => (
@@ -172,16 +184,28 @@ export default function RankingPageClient() {
               <div className="flex items-center gap-2 py-2 px-1">
                 <div className="flex-1 h-px bg-slate-700" />
                 <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
-                  {PERCENTILE_LABELS[p.topPercent] ?? `상위 ${p.topPercent}%`} 기준 ({p.rank}위)
+                  {PERCENTILE_LABELS[p.topPercent] ?? `상위 ${p.topPercent}%`} ({p.rank}위)
                 </span>
                 <div className="flex-1 h-px bg-slate-700" />
               </div>
-              <div className={`grid ${COL} gap-1 items-center px-3 py-3 rounded-xl bg-slate-800/60 border border-slate-700/50`}>
-                <span className="text-center text-slate-400 text-sm font-bold">{p.rank}</span>
-                <span className="font-medium truncate text-sm text-slate-400">{p.nickname}</span>
-                <span className="text-center text-indigo-400/80 font-bold text-sm">{p.estimatedIq}</span>
-                <span className="text-center text-slate-500 text-sm">{p.correctCount}/15</span>
-                <span className="text-center text-slate-500 text-xs">{formatTime(p.timeSeconds)}</span>
+              <div
+                className={`grid ${COL} gap-1 items-center px-3 py-3 rounded-xl bg-slate-800/60 border border-slate-700/50`}
+              >
+                <span className="text-center text-slate-400 text-sm font-bold">
+                  {p.rank}
+                </span>
+                <span className="font-medium truncate text-sm text-slate-400">
+                  {p.nickname}
+                </span>
+                <span className="text-center text-indigo-400/80 font-bold text-sm">
+                  {p.estimatedIq}
+                </span>
+                <span className="text-center text-slate-500 text-sm">
+                  {p.correctCount}/15
+                </span>
+                <span className="text-center text-slate-500 text-xs">
+                  {formatTimeClock(p.timeSeconds)}
+                </span>
               </div>
               {/* 나 — 이 퍼센타일 항목 이후 */}
               {myResult && mySection !== null && mySection === idx + 2 && (
@@ -195,7 +219,10 @@ export default function RankingPageClient() {
       )}
 
       <button
-        onClick={() => router.push("/")}
+        onClick={() => {
+          analytics.rankingChallengeClick();
+          router.push("/");
+        }}
         className="mt-6 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition"
       >
         나도 테스트하기

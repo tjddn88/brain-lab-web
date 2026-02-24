@@ -38,7 +38,7 @@ export interface ResultResponse {
   totalParticipants: number;
   topPercent: number;
   estimatedIq: number;
-  answerFeedback: QuestionFeedback[];
+  answerFeedback?: QuestionFeedback[]; // 본인 결과 조회 시에만 포함
 }
 
 export interface RankingEntry {

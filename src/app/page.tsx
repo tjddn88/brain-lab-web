@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { checkEligibility, checkNickname, submitFeedback } from "@/services/api";
+import { checkEligibility, checkNickname } from "@/services/api";
 import { analytics } from "@/lib/analytics";
+import { copyToClipboard } from "@/lib/clipboard";
+import FeedbackModal from "@/components/FeedbackModal";
 
 export default function HomePage() {
   const router = useRouter();
@@ -12,29 +14,6 @@ export default function HomePage() {
   const [checking, setChecking] = useState(false);
   const [shared, setShared] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [feedbackText, setFeedbackText] = useState("");
-  const [feedbackSending, setFeedbackSending] = useState(false);
-  const [feedbackDone, setFeedbackDone] = useState(false);
-  const [feedbackError, setFeedbackError] = useState("");
-
-  const handleFeedbackSubmit = async () => {
-    if (!feedbackText.trim()) return;
-    setFeedbackSending(true);
-    setFeedbackError("");
-    try {
-      await submitFeedback(feedbackText.trim());
-      setFeedbackDone(true);
-      setFeedbackText("");
-      setTimeout(() => {
-        setFeedbackOpen(false);
-        setFeedbackDone(false);
-      }, 1500);
-    } catch (e: unknown) {
-      setFeedbackError(e instanceof Error ? e.message : "전송에 실패했습니다.");
-    } finally {
-      setFeedbackSending(false);
-    }
-  };
 
   const handleShare = async () => {
     const url = "https://brainlab.live";
@@ -46,19 +25,7 @@ export default function HomePage() {
         // 사용자가 취소한 경우 등
       }
     } else {
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch {
-        const el = document.createElement("textarea");
-        el.value = url;
-        el.style.position = "fixed";
-        el.style.opacity = "0";
-        document.body.appendChild(el);
-        el.focus();
-        el.select();
-        document.execCommand("copy");
-        document.body.removeChild(el);
-      }
+      await copyToClipboard(url);
       setShared(true);
       setTimeout(() => setShared(false), 2000);
     }
@@ -113,23 +80,31 @@ export default function HomePage() {
       <div className="w-full bg-slate-800 rounded-2xl p-5 mb-6 space-y-2">
         <div className="flex items-center gap-3">
           <span className="text-lg w-6 text-center">📝</span>
-          <p className="text-slate-300 text-sm">총 <strong className="text-white">15문항</strong>으로 구성</p>
+          <p className="text-slate-300 text-sm">
+            총 <strong className="text-white">15문항</strong>으로 구성
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-lg w-6 text-center">⏱️</span>
-          <p className="text-slate-300 text-sm">문제당 <strong className="text-white">15초</strong> 제한</p>
+          <p className="text-slate-300 text-sm">
+            문제당 <strong className="text-white">15초</strong> 제한
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-lg w-6 text-center">🏆</span>
-          <p className="text-slate-300 text-sm">전체 참여자 대비 <strong className="text-white">순위와 예상 IQ</strong> 확인</p>
+          <p className="text-slate-300 text-sm">
+            전체 참여자 대비 <strong className="text-white">순위와 예상 IQ</strong> 확인
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-lg w-6 text-center">🔗</span>
-          <p className="text-slate-300 text-sm">결과를 <strong className="text-white">링크로 공유</strong> 가능</p>
+          <p className="text-slate-300 text-sm">
+            결과를 <strong className="text-white">링크로 공유</strong> 가능
+          </p>
         </div>
       </div>
 
-      {/* 닉네임 입력 + 버튼 (우측 FAB 영역 pr-20으로 회피) */}
+      {/* 닉네임 입력 + 버튼 */}
       <div className="w-full space-y-3">
         <input
           type="text"
@@ -168,87 +143,68 @@ export default function HomePage() {
         </p>
       </div>
 
-      {/* 플로팅 버튼 (공유 + 피드백) - 우측 하단 고정 */}
+      {/* 플로팅 버튼 (공유 + 피드백) */}
       <div className="fixed right-4 bottom-8 flex flex-col gap-3 z-40">
-        {/* 공유 */}
         <button
           onClick={handleShare}
           className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition ${
-            shared ? "bg-green-500" : "bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700"
+            shared
+              ? "bg-green-500"
+              : "bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700"
           }`}
           title="공유하기"
         >
           {shared ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-6 h-6"
+            >
               <polyline points="20 6 9 17 4 12" />
             </svg>
           ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-6 h-6"
+            >
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
             </svg>
           )}
         </button>
 
-        {/* 피드백 */}
         <button
-          onClick={() => { setFeedbackOpen(true); setFeedbackError(""); }}
+          onClick={() => setFeedbackOpen(true)}
           className="w-14 h-14 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center shadow-lg transition"
           title="개발자에게 피드백"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-6 h-6"
+          >
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         </button>
       </div>
 
-      {/* 피드백 모달 */}
-      {feedbackOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setFeedbackOpen(false); }}
-        >
-          <div className="w-full max-w-sm bg-slate-800 rounded-2xl p-5 border border-slate-700">
-            <h2 className="text-white font-bold mb-4">💬 개발자에게 피드백</h2>
-
-            {feedbackDone ? (
-              <p className="text-green-400 text-center py-4">✅ 피드백이 전송되었습니다!</p>
-            ) : (
-              <>
-                <textarea
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="의견이나 제안을 자유롭게 작성해주세요..."
-                  maxLength={500}
-                  rows={4}
-                  className="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition resize-none text-sm"
-                />
-                <div className="flex justify-between items-center mt-1 mb-3">
-                  {feedbackError
-                    ? <p className="text-red-400 text-xs">{feedbackError}</p>
-                    : <span />}
-                  <span className="text-slate-600 text-xs ml-auto">{feedbackText.length}/500</span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setFeedbackOpen(false)}
-                    className="flex-1 py-3 rounded-xl border border-slate-600 text-slate-400 hover:text-white transition text-sm"
-                  >
-                    취소
-                  </button>
-                  <button
-                    onClick={handleFeedbackSubmit}
-                    disabled={feedbackSending || !feedbackText.trim()}
-                    className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {feedbackSending ? "전송 중..." : "보내기"}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      {feedbackOpen && <FeedbackModal onClose={() => setFeedbackOpen(false)} />}
     </div>
   );
 }
