@@ -8,6 +8,7 @@ import ResultCard from "@/components/ResultCard";
 import { analytics } from "@/lib/analytics";
 import { copyToClipboard } from "@/lib/clipboard";
 import { OPTION_LABELS, CAT_ORDER } from "@/lib/utils";
+import { kakaoShare } from "@/lib/kakao";
 
 function AnswerReview({
   feedback,
@@ -168,7 +169,6 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
 
   const handleShare = async () => {
     const url = `${window.location.origin}/result/${shareToken}`;
-    analytics.resultShareClick();
     if (navigator.share) {
       try {
         await navigator.share({
@@ -301,10 +301,27 @@ export default function ResultPageClient({ shareToken }: { shareToken: string })
 
       <div className="mt-6 space-y-3">
         <button
+          onClick={() => {
+            analytics.resultShareClick();
+            kakaoShare({
+              nickname: result.nickname,
+              estimatedIq: result.estimatedIq,
+              topPercent: result.topPercent,
+              shareToken,
+            });
+          }}
+          className="w-full bg-[#FEE500] hover:bg-[#F6DC00] text-[#191919] font-bold py-4 rounded-xl transition flex items-center justify-center gap-2"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3C6.477 3 2 6.582 2 11c0 2.713 1.57 5.106 3.964 6.627L5 21l3.682-1.932C9.77 19.34 10.868 19.5 12 19.5c5.523 0 10-3.582 10-8s-4.477-8-10-8z"/>
+          </svg>
+          카카오톡으로 공유하기
+        </button>
+        <button
           onClick={handleShare}
           className="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-4 rounded-xl transition flex items-center justify-center gap-2"
         >
-          {shared ? "✅ 링크가 복사되었습니다!" : "🔗 결과 공유하기"}
+          {shared ? "✅ 링크가 복사되었습니다!" : "🔗 링크 복사"}
         </button>
         <button
           onClick={() => {

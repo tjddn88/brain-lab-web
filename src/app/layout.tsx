@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -46,6 +47,10 @@ export default function RootLayout({
         </main>
       </body>
       <GoogleAnalytics gaId="G-9QPFBS6JFH" />
+      <Script src="https://t1.kakaocdn.net/kakaojs/V1/kakao.min.js" strategy="afterInteractive" />
+      <Script id="kakao-init" strategy="afterInteractive">{`
+        if(window.Kakao && !window.Kakao.isInitialized()) window.Kakao.init('${process.env.NEXT_PUBLIC_KAKAO_JS_KEY}');
+      `}</Script>
     </html>
   );
 }
