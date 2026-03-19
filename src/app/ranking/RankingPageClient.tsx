@@ -134,32 +134,6 @@ export default function RankingPageClient() {
         </div>
       ) : (
         <div className="space-y-1">
-          {/* 내 결과 고정 배너 */}
-          {myResult && (
-            <div className="mb-3 p-4 rounded-2xl border border-indigo-500/40 bg-indigo-950/40">
-              <p className="text-indigo-400 text-xs font-medium mb-2">내 결과</p>
-              <div className="flex items-center justify-between">
-                <div className="text-center">
-                  <p className="text-indigo-300 text-2xl font-black">{myResult.estimatedIq}</p>
-                  <p className="text-indigo-500 text-xs">예상 IQ</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-white text-lg font-bold">{myResult.correctCount}<span className="text-slate-500 text-sm font-normal">/15</span></p>
-                  <p className="text-slate-500 text-xs">정답</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-white text-lg font-bold">{myResult.score.toLocaleString()}</p>
-                  <p className="text-slate-500 text-xs">점수</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-white text-base font-bold">{formatTimeClock(myResult.timeSeconds)}</p>
-                  <p className="text-slate-500 text-xs">시간</p>
-                </div>
-              </div>
-              <p className="text-indigo-600 text-xs mt-2 text-center">↓ 아래 목록에서 내 위치 확인</p>
-            </div>
-          )}
-
           {/* 컬럼 헤더 */}
           <div className={`grid ${COL} gap-1 px-3 py-2 text-xs text-slate-500 font-medium`}>
             <span className="text-center">#</span>

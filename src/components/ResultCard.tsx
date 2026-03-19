@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { ResultResponse } from "@/types";
 import { formatTimeMinSec, getIqInfo } from "@/lib/utils";
 
@@ -11,22 +10,6 @@ interface ResultCardProps {
 
 export default function ResultCard({ result, iqDelta }: ResultCardProps) {
   const iqInfo = getIqInfo(result.estimatedIq);
-  const [displayIq, setDisplayIq] = useState(75);
-
-  useEffect(() => {
-    const target = result.estimatedIq;
-    const duration = 1200;
-    const startTime = performance.now();
-    let raf: number;
-    const tick = (now: number) => {
-      const progress = Math.min((now - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplayIq(Math.round(75 + (target - 75) * eased));
-      if (progress < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [result.estimatedIq]);
 
   return (
     <div className="w-full space-y-4">
@@ -34,7 +17,7 @@ export default function ResultCard({ result, iqDelta }: ResultCardProps) {
       <div className="bg-slate-800 rounded-2xl p-8 text-center border border-slate-700">
         <p className="text-slate-400 text-sm mb-1">{result.nickname}님의 예상 IQ</p>
         <div className={`text-7xl font-black mb-2 ${iqInfo.color}`}>
-          {displayIq}
+          {result.estimatedIq}
         </div>
         <p className={`text-lg font-semibold ${iqInfo.color}`}>{iqInfo.label}</p>
         {iqDelta != null && iqDelta !== 0 && (

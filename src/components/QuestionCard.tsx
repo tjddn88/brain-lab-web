@@ -24,6 +24,17 @@ export default function QuestionCard({
       onCopy={(e) => e.preventDefault()}
       onContextMenu={(e) => e.preventDefault()}
     >
+      {question.correctRate !== null && (
+        <div className="flex justify-end">
+          <span className="text-xs text-slate-500">
+            정답율{" "}
+            <span className="text-slate-400 font-medium">
+              {question.correctRate}%
+            </span>
+          </span>
+        </div>
+      )}
+
       <p className="text-white text-base font-medium leading-relaxed">
         {obscureText(question.content)}
       </p>
