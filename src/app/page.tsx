@@ -14,6 +14,7 @@ export default function HomePage() {
   const [checking, setChecking] = useState(false);
   const [shared, setShared] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
 
   const handleShare = async () => {
     const url = "https://brainlab.live";
@@ -53,7 +54,7 @@ export default function HomePage() {
       const canSubmit = await checkEligibility();
       if (!canSubmit) {
         analytics.alreadySubmitted();
-        setError("오늘은 이미 테스트를 완료하셨습니다. 매일 한 번만 참여할 수 있습니다.");
+        setAlreadySubmitted(true);
         return;
       }
     } catch {
@@ -76,72 +77,86 @@ export default function HomePage() {
         <p className="text-slate-600 text-xs mt-1">공식 IQ 검사가 아닌 참고용 테스트입니다</p>
       </div>
 
-      {/* 설명 카드 */}
-      <div className="w-full bg-slate-800 rounded-2xl p-5 mb-6 space-y-2">
-        <div className="flex items-center gap-3">
-          <span className="text-lg w-6 text-center">📝</span>
-          <p className="text-slate-300 text-sm">
-            총 <strong className="text-white">15문항</strong>으로 구성
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-lg w-6 text-center">⏱️</span>
-          <p className="text-slate-300 text-sm">
-            문제당 <strong className="text-white">15초</strong> 제한
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-lg w-6 text-center">🏆</span>
-          <p className="text-slate-300 text-sm">
-            전체 참여자 대비 <strong className="text-white">순위와 예상 IQ</strong> 확인
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-lg w-6 text-center">🔗</span>
-          <p className="text-slate-300 text-sm">
-            결과를 <strong className="text-white">링크로 공유</strong> 가능
-          </p>
-        </div>
+      {/* 설명 한 줄 */}
+      <div className="flex items-center justify-center flex-wrap gap-x-3 gap-y-1 mb-8 text-slate-500 text-sm">
+        <span>📝 15문항</span>
+        <span className="text-slate-700">·</span>
+        <span>⏱️ 15초 제한</span>
+        <span className="text-slate-700">·</span>
+        <span>🏆 순위/IQ 확인</span>
+        <span className="text-slate-700">·</span>
+        <span>🔗 링크 공유</span>
       </div>
 
       {/* 닉네임 입력 + 버튼 */}
-      <div className="w-full space-y-3">
-        <input
-          type="text"
-          value={nickname}
-          onChange={(e) => {
-            setNickname(e.target.value);
-            setError("");
-          }}
-          onKeyDown={(e) => e.key === "Enter" && handleStart()}
-          placeholder="닉네임을 입력하세요 (최대 20자)"
-          maxLength={20}
-          className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
-        />
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+      {alreadySubmitted ? (
+        <div className="w-full bg-slate-800 rounded-2xl p-6 border border-indigo-500/30 text-center space-y-4">
+          <div className="text-4xl">✅</div>
+          <div>
+            <p className="text-white font-bold text-lg">오늘 이미 참여하셨어요!</p>
+            <p className="text-slate-400 text-sm mt-1">자정 이후 다시 도전할 수 있습니다</p>
+          </div>
+          <div className="space-y-2 pt-1">
+            {(() => {
+              try {
+                const cached = sessionStorage.getItem("lastResult");
+                if (cached) {
+                  const parsed = JSON.parse(cached);
+                  if (parsed?.shareToken) {
+                    return (
+                      <button
+                        onClick={() => router.push(`/result/${parsed.shareToken}`)}
+                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition"
+                      >
+                        내 결과 보기
+                      </button>
+                    );
+                  }
+                }
+              } catch {}
+              return null;
+            })()}
+            <button
+              onClick={() => router.push("/ranking")}
+              className="w-full border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 font-medium py-3 rounded-xl transition"
+            >
+              🏆 전체 순위 보기
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full space-y-3">
+          <input
+            type="text"
+            value={nickname}
+            onChange={(e) => {
+              setNickname(e.target.value);
+              setError("");
+            }}
+            onKeyDown={(e) => e.key === "Enter" && handleStart()}
+            placeholder="닉네임을 입력하세요 (최대 20자)"
+            maxLength={20}
+            className="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+          />
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
-        <button
-          onClick={handleStart}
-          disabled={checking}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold py-4 rounded-xl transition text-base disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {checking ? "확인 중..." : "테스트 시작"}
-        </button>
+          <button
+            onClick={handleStart}
+            disabled={checking}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-bold py-4 rounded-xl transition text-base disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {checking ? "확인 중..." : "테스트 시작"}
+          </button>
 
-        <button
-          onClick={() => router.push("/ranking")}
-          className="w-full border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 font-medium py-4 rounded-xl transition text-base"
-        >
-          🏆 전체 순위 보기
-        </button>
-      </div>
+          <button
+            onClick={() => router.push("/ranking")}
+            className="w-full border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 font-medium py-4 rounded-xl transition text-base"
+          >
+            🏆 전체 순위 보기
+          </button>
+        </div>
+      )}
 
-      {/* 하단 안내 */}
-      <div className="mt-6 pt-4 border-t border-slate-800 text-center">
-        <p className="text-slate-700 text-xs">
-          🛡️ 공정한 테스트를 위해 다양한 AI 방지 기술이 적용되어 있습니다
-        </p>
-      </div>
 
       {/* 플로팅 버튼 (공유 + 피드백) */}
       <div className="fixed right-4 bottom-8 flex flex-col gap-3 z-40">

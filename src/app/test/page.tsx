@@ -244,8 +244,6 @@ export default function TestPage() {
 
   // ── 문제 화면 ────────────────────────────────────────────────
   const question = questions[currentIndex];
-  const catStart = questions.findIndex((q) => q.category === question.category);
-  const questionInCat = currentIndex - catStart + 1;
 
   return (
     <div className="flex flex-col flex-1 px-4 py-3">
@@ -254,8 +252,8 @@ export default function TestPage() {
         <div className="flex items-center gap-2">
           <span className="text-slate-500 text-sm">{question.category}</span>
           <span className="text-slate-600 text-sm">·</span>
-          <span className="text-white font-bold">{questionInCat}</span>
-          <span className="text-slate-500 text-sm">/ 3</span>
+          <span className="text-white font-bold">{currentIndex + 1}</span>
+          <span className="text-slate-500 text-sm">/ {questions.length}</span>
         </div>
         <Timer
           key={currentIndex}
